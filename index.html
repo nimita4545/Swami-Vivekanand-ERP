@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swami Vivekanand School ERP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="background"></div>
+    <div class="overlay"></div>
+
+    <main class="page">
+
+        <header class="brand">
+            <h1>Swami Vivekanand</h1>
+            <p>SCHOOL ERP SYSTEM</p>
+        </header>
+
+        <section class="login-card">
+
+            <div class="logo-wrap">
+                <img src="education-logo.jpg" alt="Education Logo">
+            </div>
+
+            <h2>Login</h2>
+
+            <form id="loginForm">
+
+                <label for="username">Username</label>
+
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="Enter username"
+                    required
+                >
+
+                <label for="password">Password</label>
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Enter password"
+                    required
+                >
+
+                <div class="role-title">
+                    Login As
+                </div>
+
+                <div class="roles">
+
+                    <button
+                        type="button"
+                        class="role active"
+                        data-role="student"
+                    >
+                        Student
+                    </button>
+
+                    <button
+                        type="button"
+                        class="role"
+                        data-role="teacher"
+                    >
+                        Teacher
+                    </button>
+
+                    <button
+                        type="button"
+                        class="role"
+                        data-role="admin"
+                    >
+                        Admin
+                    </button>
+
+                </div>
+
+                <button
+                    class="login-btn"
+                    type="submit"
+                >
+                    Login
+                </button>
+
+                <p id="message" class="message"></p>
+
+            </form>
+
+        </section>
+
+    </main>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
