@@ -1,5 +1,7 @@
 let selectedRole = "student";
 
+const API_URL = "https://swami-vivekanand-erp-backend2-1.onrender.com";
+
 
 // Select Student / Teacher / Admin
 const roleButtons = document.querySelectorAll(".role");
@@ -8,15 +10,12 @@ roleButtons.forEach(function(button) {
 
     button.addEventListener("click", function() {
 
-        // Remove active class from all buttons
         roleButtons.forEach(function(btn) {
             btn.classList.remove("active");
         });
 
-        // Add active class to selected button
         button.classList.add("active");
 
-        // Store selected role
         selectedRole = button.getAttribute("data-role");
     });
 
@@ -40,7 +39,6 @@ loginForm.addEventListener("submit", async function(event) {
         document.getElementById("message");
 
 
-    // Check empty fields
     if (username === "" || password === "") {
 
         message.textContent =
@@ -52,38 +50,33 @@ loginForm.addEventListener("submit", async function(event) {
     }
 
 
-    // Show loading message
     message.textContent = "Checking login...";
     message.className = "message";
 
 
     try {
 
-        const response = await fetch("/api/login", {
+        const response = await fetch(
+            `${API_URL}/api/login`,
+            {
+                method: "POST",
 
-            method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
 
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-
-                username: username,
-
-                password: password,
-
-                role: selectedRole
-
-            })
-
-        });
+                body: JSON.stringify({
+                    username: username,
+                    password: password,
+                    role: selectedRole
+                })
+            }
+        );
 
 
         const result = await response.json();
 
 
-        // Login failed
         if (!response.ok) {
 
             message.textContent =
@@ -95,7 +88,6 @@ loginForm.addEventListener("submit", async function(event) {
         }
 
 
-        // Login successful
         message.textContent =
             "Login successful. Welcome, " + result.name + "!";
 
@@ -104,12 +96,12 @@ loginForm.addEventListener("submit", async function(event) {
 
     } catch (error) {
 
+        console.error("Login error:", error);
+
         message.textContent =
             "Unable to connect to the server.";
 
         message.className = "message error";
-
-        console.error(error);
     }
 
 });
