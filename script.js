@@ -1,6 +1,6 @@
 let selectedRole = "student";
 
-const API_URL = "https://swami-vivekanand-erp-backend2-1.onrender.com";
+const API_URL = "https://swami-vivekanand-erp-backend2-2.onrender.com";
 
 
 // Select Student / Teacher / Admin
