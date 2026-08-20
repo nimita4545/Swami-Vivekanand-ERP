@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Swami Vivekanand School ERP</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background-color: #f4f7fe; color: #333; padding: 20px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; background-color: #0047ab; color: white; padding: 15px 20px; border-radius: 6px; margin-bottom: 20px; }
+        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        
+        .card { background: white; border-radius: 6px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+        .card-title { font-size: 18px; font-weight: bold; color: #0047ab; margin-bottom: 15px; border-bottom: 2px solid #eef2ff; padding-bottom: 5px; }
+        
+        .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .profile-item { background: #f8fafc; padding: 12px; border-left: 4px solid #0047ab; border-radius: 4px; }
+        .profile-item label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
+        .profile-item span { font-size: 16px; font-weight: bold; }
+
+        .attendance-bar-bg { background: #e2e8f0; border-radius: 10px; height: 20px; width: 100%; overflow: hidden; margin-top: 10px; }
+        .attendance-bar-fill { background: #28a745; height: 100%; width: 88%; text-align: center; color: white; font-size: 12px; line-height: 20px; font-weight: bold; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: center; }
+        th { background-color: #f1f5f9; color: #1e293b; }
+
+        .pay-btn { background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+        /* Chatbot Overlay */
+        .chat-widget { position: fixed; bottom: 20px; right: 20px; width: 340px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; }
+        .chat-header { background: #0047ab; color: white; padding: 12px; font-weight: bold; font-size: 14px; }
+        .chat-body { height: 260px; padding: 10px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 8px; }
+        .msg { padding: 8px 12px; border-radius: 6px; font-size: 13px; max-width: 80%; word-wrap: break-word; }
+        .msg-bot { background: #e2e8f0; align-self: flex-start; color: #0f172a; }
+        .msg-user { background: #0047ab; color: white; align-self: flex-end; }
+        .chat-footer { display: flex; border-top: 1px solid #cbd5e1; }
+        .chat-input { flex: 1; border: none; padding: 10px; outline: none; font-size: 13px; }
+        .chat-send { background: #0047ab; color: white; border: none; padding: 0 15px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Swami Vivekanand School ERP - Student Portal</h2>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Student Profile -->
+    <div class="card">
+        <div class="card-title">Student Profile</div>
+        <div class="profile-grid">
+            <div class="profile-item"><label>Student Name</label><span id="p-name">Loading...</span></div>
+            <div class="profile-item"><label>Class & Division</label><span id="p-class">Loading...</span></div>
+            <div class="profile-item"><label>Class Teacher</label><span id="p-teacher">Dilip Patil</span></div>
+            <div class="profile-item"><label>School ID</label><span id="p-id">Loading...</span></div>
+        </div>
+    </div>
+
+    <!-- Attendance -->
+    <div class="card">
+        <div class="card-title">Attendance Overview</div>
+        <p>Current Attendance Status: <strong>88% (140 / 159 Days Attended)</strong></p>
+        <div class="attendance-bar-bg">
+            <div class="attendance-bar-fill">88%</div>
+        </div>
+    </div>
+
+    <!-- Academic Marks -->
+    <div class="card">
+        <div class="card-title">Academic Marks & Evaluation</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Unit Test 1 (20)</th>
+                    <th>Unit Test 2 (20)</th>
+                    <th>Assignment (10)</th>
+                    <th>Oral Exam (10)</th>
+                    <th>Final Exam (40)</th>
+                    <th>Total (100)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Mathematics</td>
+                    <td>18</td>
+                    <td>17</td>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>36</td>
+                    <td><strong>89</strong></td>
+                </tr>
+                <tr>
+                    <td>Science</td>
+                    <td>16</td>
+                    <td>18</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>34</td>
+                    <td><strong>85</strong></td>
+                </tr>
+                <tr>
+                    <td>English</td>
+                    <td>17</td>
+                    <td>16</td>
+                    <td>9</td>
+                    <td>8</td>
+                    <td>35</td>
+                    <td><strong>85</strong></td>
+                </tr>
+                <tr>
+                    <td>Social Science</td>
+                    <td>19</td>
+                    <td>18</td>
+                    <td>10</td>
+                    <td>9</td>
+                    <td>37</td>
+                    <td><strong>93</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Weekly Timetable -->
+    <div class="card">
+        <div class="card-title">Weekly Class Timetable</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Monday</th>
+                    <th>Tuesday</th>
+                    <th>Wednesday</th>
+                    <th>Thursday</th>
+                    <th>Friday</th>
+                    <th>Saturday</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>9:00 - 9:40</td><td>Mathematics</td><td>Science</td><td>English</td><td>Hindi</td><td>Marathi</td><td>Social Science</td></tr>
+                <tr><td>9:40 - 10:20</td><td>Science</td><td>English</td><td>Hindi</td><td>Marathi</td><td>Social Science</td><td>Sanskrit</td></tr>
+                <tr><td>10:20 - 11:00</td><td>English</td><td>Hindi</td><td>Marathi</td><td>Social Science</td><td>Sanskrit</td><td>Mathematics</td></tr>
+                <tr><td>11:00 - 11:40</td><td>Hindi</td><td>Marathi</td><td>Social Science</td><td>Sanskrit</td><td>Mathematics</td><td>Science</td></tr>
+                <tr><td>11:40 - 12:00</td><td colspan="6"><strong>SHORT BREAK</strong></td></tr>
+                <tr><td>12:00 - 12:40</td><td>Marathi</td><td>Social Science</td><td>Sanskrit</td><td>Mathematics</td><td>Science</td><td>English</td></tr>
+                <tr><td>12:40 - 13:20</td><td>Social Science</td><td>Sanskrit</td><td>Mathematics</td><td>Science</td><td>English</td><td>Hindi</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Academic Holidays -->
+    <div class="card">
+        <div class="card-title">Upcoming Holidays</div>
+        <ul>
+            <li style="margin-left: 20px; margin-bottom: 5px;">Ganesh Chaturthi: September 7, 2026</li>
+            <li style="margin-left: 20px; margin-bottom: 5px;">Mahatma Gandhi Jayanti: October 2, 2026</li>
+            <li style="margin-left: 20px; margin-bottom: 5px;">Diwali Vacation: November 8, 2026 - November 18, 2026</li>
+        </ul>
+    </div>
+
+    <!-- Fee Payment Option -->
+    <div class="card">
+        <div class="card-title">Online Fee Payment</div>
+        <p>Pending Term Fee Balance: <strong>INR 4,500</strong></p>
+        <button class="pay-btn" onclick="initiatePayment()">Pay Term Fees Now</button>
+    </div>
+
+    <!-- Embedded Student Assistant Chatbot -->
+    <div class="chat-widget">
+        <div class="chat-header">ERP Assistant Chatbot</div>
+        <div class="chat-body" id="chat-body">
+            <div class="msg msg-bot">Hello! Ask me about your attendance, marks, or upcoming holidays.</div>
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="chat-input" class="chat-input" placeholder="Type your query here..." onkeypress="handleKeyPress(event)">
+            <button class="chat-send" onclick="sendChatMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Load logged in user data
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.role !== 'student') {
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('p-name').textContent = currentUser.name || "Student";
+            document.getElementById('p-class').textContent = `${currentUser.class || "5th"} - ${currentUser.div || "A"}`;
+            document.getElementById('p-id').textContent = currentUser.school_id || currentUser.username || "SCH484";
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+
+        // Razorpay Fee Payment Function
+        function initiatePayment() {
+            var options = {
+                "key": "rzp_test_dummykey", 
+                "amount": 450000, // Amount in paise = INR 4500
+                "currency": "INR",
+                "name": "Swami Vivekanand School",
+                "description": "Term School Fee Payment",
+                "handler": function (response){
+                    alert("Payment successful. Transaction ID: " + response.razorpay_payment_id);
+                },
+                "prefill": {
+                    "name": currentUser ? currentUser.name : "Student",
+                },
+                "theme": { "color": "#0047ab" }
+            };
+            var rzp = new Razorpay(options);
+            rzp.open();
+        }
+
+        // AI Chatbot Functionality
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendChatMessage();
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim().toLowerCase();
+            if (!text) return;
+
+            addMessage(input.value, 'msg-user');
+            input.value = '';
+
+            let reply = "I am sorry, I did not understand your question. Try asking 'what is my attendance', 'what are my marks', or 'when is holiday'.";
+
+            if (text.includes('attendance')) {
+                reply = "Your total attendance is 88% (140 out of 159 days attended).";
+            } else if (text.includes('mark') || text.includes('result') || text.includes('score')) {
+                reply = "Your academic scores are: Mathematics: 89/100, Science: 85/100, English: 85/100, Social Science: 93/100.";
+            } else if (text.includes('holiday') || text.includes('vacation')) {
+                reply = "Upcoming holidays: Ganesh Chaturthi (Sept 7), Gandhi Jayanti (Oct 2), and Diwali Vacation (Nov 8 to Nov 18).";
+            } else if (text.includes('teacher') || text.includes('class teacher')) {
+                reply = "Your class teacher is Dilip Patil.";
+            } else if (text.includes('time') || text.includes('schedule') || text.includes('timetable')) {
+                reply = "Classes start daily at 9:00 AM. Your short break is from 11:40 AM to 12:00 PM.";
+            }
+
+            setTimeout(() => {
+                addMessage(reply, 'msg-bot');
+            }, 400);
+        }
+
+        function addMessage(text, className) {
+            const body = document.getElementById('chat-body');
+            const div = document.createElement('div');
+            div.className = `msg ${className}`;
+            div.textContent = text;
+            body.appendChild(div);
+            body.scrollTop = body.scrollHeight;
+        }
+    </script>
+</body>
+</html>
