@@ -9,20 +9,27 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
         body { background-color: #f4f7fe; color: #333; padding: 20px; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; background-color: #0047ab; color: white; padding: 15px 20px; border-radius: 6px; margin-bottom: 25px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background-color: #0047ab; color: white; padding: 15px 20px; border-radius: 6px; margin-bottom: 20px; }
         .logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         
-        /* Section Layout */
-        .section { background: white; border-radius: 6px; padding: 20px; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
-        .section-header { font-size: 20px; font-weight: bold; color: #0047ab; margin-bottom: 15px; border-bottom: 2px solid #0047ab; padding-bottom: 8px; }
-        
         /* Profile Grid */
-        .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .profile-card { background: #f8fafc; padding: 12px; border-left: 4px solid #0047ab; border-radius: 4px; }
-        .profile-card label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
-        .profile-card span { font-size: 16px; font-weight: bold; }
+        .profile-card-container { background: white; border-radius: 6px; padding: 15px 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+        .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .profile-item { background: #f8fafc; padding: 10px 12px; border-left: 4px solid #0047ab; border-radius: 4px; }
+        .profile-item label { font-size: 11px; color: #666; display: block; margin-bottom: 3px; }
+        .profile-item span { font-size: 15px; font-weight: bold; }
 
-        /* Attendance */
+        /* Horizontal Tab Bar */
+        .tab-navigation { display: flex; flex-wrap: wrap; gap: 8px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .tab-btn { background: transparent; border: none; padding: 12px 20px; font-size: 14px; font-weight: bold; color: #475569; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; }
+        .tab-btn.active { background-color: #0047ab; color: white; }
+
+        /* Tab Content Panel */
+        .tab-panel { display: none; background: white; border-radius: 6px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+        .tab-panel.active { display: block; }
+        .panel-title { font-size: 18px; font-weight: bold; color: #0047ab; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
+
+        /* Attendance Bar */
         .attendance-bar-bg { background: #e2e8f0; border-radius: 10px; height: 22px; width: 100%; overflow: hidden; margin-top: 10px; }
         .attendance-bar-fill { background: #28a745; height: 100%; width: 88%; text-align: center; color: white; font-size: 12px; line-height: 22px; font-weight: bold; }
 
@@ -31,10 +38,16 @@
         th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: center; }
         th { background-color: #f1f5f9; color: #1e293b; }
 
+        /* Report Card Grid */
+        .report-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .report-card-item { background: #eef2ff; padding: 15px; border-radius: 6px; text-align: center; }
+        .report-card-item label { font-size: 12px; color: #475569; display: block; }
+        .report-card-item span { font-size: 22px; font-weight: bold; color: #0047ab; }
+
         /* Payment */
         .pay-btn { background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; }
 
-        /* Chatbot Section */
+        /* Chatbot */
         .chat-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; height: 250px; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .msg { padding: 8px 12px; border-radius: 6px; font-size: 13px; max-width: 75%; word-wrap: break-word; }
         .msg-bot { background: #e2e8f0; align-self: flex-start; color: #0f172a; }
@@ -46,35 +59,45 @@
 </head>
 <body>
 
-    <!-- Header -->
+    <!-- Top Header -->
     <div class="header">
         <h2>Swami Vivekanand School ERP</h2>
         <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 
-    <!-- 1. Profile Section -->
-    <div class="section">
-        <div class="section-header">1. Profile</div>
+    <!-- Student Profile Information Header -->
+    <div class="profile-card-container">
         <div class="profile-grid">
-            <div class="profile-card"><label>Student Name</label><span id="p-name">Loading...</span></div>
-            <div class="profile-card"><label>Class & Division</label><span id="p-class">Loading...</span></div>
-            <div class="profile-card"><label>Class Teacher</label><span id="p-teacher">Dilip Patil</span></div>
-            <div class="profile-card"><label>School ID / Username</label><span id="p-id">Loading...</span></div>
+            <div class="profile-item"><label>Student Name</label><span id="p-name">Loading...</span></div>
+            <div class="profile-item"><label>Class & Division</label><span id="p-class">Loading...</span></div>
+            <div class="profile-item"><label>Class Teacher</label><span id="p-teacher">Dilip Patil</span></div>
+            <div class="profile-item"><label>School ID / Roll No</label><span id="p-id">Loading...</span></div>
         </div>
     </div>
 
-    <!-- 2. Attendance Section -->
-    <div class="section">
-        <div class="section-header">2. Attendance</div>
+    <!-- Section Navigation Tabs -->
+    <div class="tab-navigation">
+        <button class="tab-btn active" onclick="openTab('attendance')">Attendance</button>
+        <button class="tab-btn" onclick="openTab('marks')">View Marks</button>
+        <button class="tab-btn" onclick="openTab('reportcard')">Report Card</button>
+        <button class="tab-btn" onclick="openTab('holiday')">Holiday Notice</button>
+        <button class="tab-btn" onclick="openTab('fees')">Fees Section</button>
+        <button class="tab-btn" onclick="openTab('timetable')">Timetable Section</button>
+        <button class="tab-btn" onclick="openTab('chatbot')">Student Chatbot</button>
+    </div>
+
+    <!-- 1. Attendance Panel -->
+    <div id="attendance" class="tab-panel active">
+        <div class="panel-title">Attendance Status</div>
         <p>Total Attendance Score: <strong>88% (140 / 159 Days Attended)</strong></p>
         <div class="attendance-bar-bg">
             <div class="attendance-bar-fill">88%</div>
         </div>
     </div>
 
-    <!-- 3. Marks Section -->
-    <div class="section">
-        <div class="section-header">3. Marks</div>
+    <!-- 2. View Marks Panel -->
+    <div id="marks" class="tab-panel">
+        <div class="panel-title">Detailed Evaluation Marks</div>
         <table>
             <thead>
                 <tr>
@@ -84,53 +107,79 @@
                     <th>Assignment (10)</th>
                     <th>Oral Exam (10)</th>
                     <th>Final Exam (40)</th>
-                    <th>Total Score (100)</th>
+                    <th>Total Marks (100)</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Mathematics</td>
-                    <td>18</td>
-                    <td>17</td>
-                    <td>9</td>
-                    <td>9</td>
-                    <td>36</td>
-                    <td><strong>89</strong></td>
-                </tr>
-                <tr>
-                    <td>Science</td>
-                    <td>16</td>
-                    <td>18</td>
-                    <td>8</td>
-                    <td>9</td>
-                    <td>34</td>
-                    <td><strong>85</strong></td>
-                </tr>
-                <tr>
-                    <td>English</td>
-                    <td>17</td>
-                    <td>16</td>
-                    <td>9</td>
-                    <td>8</td>
-                    <td>35</td>
-                    <td><strong>85</strong></td>
-                </tr>
-                <tr>
-                    <td>Social Science</td>
-                    <td>19</td>
-                    <td>18</td>
-                    <td>10</td>
-                    <td>9</td>
-                    <td>37</td>
-                    <td><strong>93</strong></td>
-                </tr>
+                <tr><td>Mathematics</td><td>18</td><td>17</td><td>9</td><td>9</td><td>36</td><td><strong>89</strong></td></tr>
+                <tr><td>Science</td><td>16</td><td>18</td><td>8</td><td>9</td><td>34</td><td><strong>85</strong></td></tr>
+                <tr><td>English</td><td>17</td><td>16</td><td>9</td><td>8</td><td>35</td><td><strong>85</strong></td></tr>
+                <tr><td>Social Science</td><td>19</td><td>18</td><td>10</td><td>9</td><td>37</td><td><strong>93</strong></td></tr>
             </tbody>
         </table>
     </div>
 
-    <!-- 4. Timetable Section -->
-    <div class="section">
-        <div class="section-header">4. Timetable</div>
+    <!-- 3. Report Card Panel -->
+    <div id="reportcard" class="tab-panel">
+        <div class="panel-title">Annual Performance Report Card</div>
+        <div class="report-summary-grid">
+            <div class="report-card-item">
+                <label>Total Marks Obtained</label>
+                <span>352 / 400</span>
+            </div>
+            <div class="report-card-item">
+                <label>Overall Percentage</label>
+                <span>88.00%</span>
+            </div>
+            <div class="report-card-item">
+                <label>Overall Grade</label>
+                <span>A+</span>
+            </div>
+            <div class="report-card-item">
+                <label>Final Result</label>
+                <span style="color: #28a745;">PASSED</span>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Total Obtained Marks</th>
+                    <th>Maximum Marks</th>
+                    <th>Percentage</th>
+                    <th>Grade</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Mathematics</td><td>89</td><td>100</td><td>89%</td><td>A+</td></tr>
+                <tr><td>Science</td><td>85</td><td>100</td><td>85%</td><td>A</td></tr>
+                <tr><td>English</td><td>85</td><td>100</td><td>85%</td><td>A</td></tr>
+                <tr><td>Social Science</td><td>93</td><td>100</td><td>93%</td><td>O</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 4. Holiday Notice Panel -->
+    <div id="holiday" class="tab-panel">
+        <div class="panel-title">Holiday Notices & Vacations</div>
+        <ul style="margin-left: 20px; line-height: 1.8;">
+            <li><strong>Ganesh Chaturthi:</strong> September 7, 2026</li>
+            <li><strong>Mahatma Gandhi Jayanti:</strong> October 2, 2026</li>
+            <li><strong>Diwali Vacation:</strong> November 8, 2026 to November 18, 2026</li>
+        </ul>
+    </div>
+
+    <!-- 5. Fees Section Panel -->
+    <div id="fees" class="tab-panel">
+        <div class="panel-title">Online Fees Payment</div>
+        <p>Pending Term Fee Balance: <strong>INR 4,500</strong></p>
+        <button class="pay-btn" onclick="initiatePayment()">Pay Term Fees Online</button>
+    </div>
+
+    <!-- 6. Timetable Panel -->
+    <div id="timetable" class="tab-panel">
+        <div class="panel-title">Class Timetable Schedule</div>
         <table>
             <thead>
                 <tr>
@@ -155,25 +204,11 @@
         </table>
     </div>
 
-    <!-- 5. Holiday Notice Section -->
-    <div class="section">
-        <div class="section-header">5. Holiday Notice</div>
-        <ul style="margin-left: 20px; line-height: 1.8;">
-            <li><strong>Ganesh Chaturthi:</strong> September 7, 2026</li>
-            <li><strong>Mahatma Gandhi Jayanti:</strong> October 2, 2026</li>
-            <li><strong>Diwali Vacation:</strong> November 8, 2026 to November 18, 2026</li>
-        </ul>
-        <div style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
-            <p>Pending Term Fee Balance: <strong>INR 4,500</strong></p>
-            <button class="pay-btn" onclick="initiatePayment()">Pay Term Fees Online</button>
-        </div>
-    </div>
-
-    <!-- 6. Student Chatbot Section -->
-    <div class="section">
-        <div class="section-header">6. Student Chatbot</div>
+    <!-- 7. Student Chatbot Panel -->
+    <div id="chatbot" class="tab-panel">
+        <div class="panel-title">Student Assistant Chatbot</div>
         <div class="chat-box" id="chat-box">
-            <div class="msg msg-bot">Hello! Type your question below to ask about your attendance, marks, class timetable, or upcoming holiday notices.</div>
+            <div class="msg msg-bot">Hello! Ask me about your attendance, report card percentage, timetable, or upcoming holiday notices.</div>
         </div>
         <div class="chat-input-area">
             <input type="text" id="chat-input" class="chat-input" placeholder="Type query here..." onkeypress="handleKeyPress(event)">
@@ -182,7 +217,7 @@
     </div>
 
     <script>
-        // Check active session
+        // Check active login user
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
         if (!currentUser || currentUser.role !== 'student') {
             window.location.href = 'index.html';
@@ -197,7 +232,19 @@
             window.location.href = 'index.html';
         }
 
-        // Razorpay Payment Integration
+        // Tab Switch Logic
+        function openTab(tabName) {
+            const panels = document.querySelectorAll('.tab-panel');
+            const buttons = document.querySelectorAll('.tab-btn');
+
+            panels.forEach(panel => panel.classList.remove('active'));
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Payment Integration
         function initiatePayment() {
             var options = {
                 "key": "rzp_test_dummykey", 
@@ -230,18 +277,18 @@
             addMessage(input.value, 'msg-user');
             input.value = '';
 
-            let reply = "I am sorry, I didn't catch that. Please ask about your attendance, marks, timetable, or holidays.";
+            let reply = "I am sorry, I didn't catch that. Try asking about your attendance, marks, percentage, timetable, or holidays.";
 
             if (text.includes('attendance')) {
                 reply = "Your attendance is 88% (140 out of 159 days attended).";
+            } else if (text.includes('percentage') || text.includes('report') || text.includes('grade')) {
+                reply = "Your total score is 352/400 with an overall percentage of 88.00% (Grade A+).";
             } else if (text.includes('mark') || text.includes('score') || text.includes('result')) {
-                reply = "Your academic scores are: Mathematics: 89/100, Science: 85/100, English: 85/100, Social Science: 93/100.";
+                reply = "Your subject marks are: Mathematics: 89/100, Science: 85/100, English: 85/100, Social Science: 93/100.";
             } else if (text.includes('holiday') || text.includes('vacation') || text.includes('notice')) {
                 reply = "Upcoming holidays: Ganesh Chaturthi (Sept 7), Gandhi Jayanti (Oct 2), and Diwali Vacation (Nov 8 to Nov 18).";
-            } else if (text.includes('teacher') || text.includes('class teacher')) {
-                reply = "Your class teacher is Dilip Patil.";
             } else if (text.includes('time') || text.includes('schedule') || text.includes('timetable')) {
-                reply = "Daily classes run from 9:00 AM to 1:20 PM with a short break from 11:40 AM to 12:00 PM.";
+                reply = "Classes start at 9:00 AM daily. Short break is from 11:40 AM to 12:00 PM.";
             }
 
             setTimeout(() => {
