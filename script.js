@@ -1,160 +1,123 @@
-let selectedRole = "student";
-
-// Base API URL for your updated Render deployment
 const API_URL = "https://swami-vivekanand-erp-backend2-6.onrender.com";
 
-// ==========================================
-// 1. LOGIN FORM LOGIC (FOR INDEX / LOGIN PAGE)
-// ==========================================
-const roleButtons = document.querySelectorAll(".role");
+let globalStudents = [];
 
-if (roleButtons.length > 0) {
-    roleButtons.forEach(function(button) {
-        button.addEventListener("click", function() {
-            roleButtons.forEach(function(btn) {
-                btn.classList.remove("active");
-            });
-
-            button.classList.add("active");
-            selectedRole = button.getAttribute("data-role");
-        });
-    });
-}
-
-const loginForm = document.getElementById("loginForm");
-
-if (loginForm) {
-    loginForm.addEventListener("submit", async function(event) {
-        event.preventDefault();
-
-        const username = document.getElementById("username").value.trim();
-        const password = document.getElementById("password").value;
-        const message = document.getElementById("message");
-
-        if (username === "" || password === "") {
-            message.textContent = "Please enter username and password.";
-            message.className = "message error";
-            return;
-        }
-
-        message.textContent = "Checking login (Render free instances may take up to 30s to wake up)...";
-        message.className = "message";
-
-        try {
-            const response = await fetch(`${API_URL}/api/login`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    username: username,
-                    password: password,
-                    role: selectedRole
-                })
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                message.textContent = result.message || "Invalid login details.";
-                message.className = "message error";
-                return;
-            }
-
-            // Display success message
-            message.textContent = `Login successful. Redirecting ${result.name}...`;
-            message.className = "message success";
-
-            // Store active session data
-            localStorage.setItem("currentUser", JSON.stringify(result));
-            localStorage.setItem("loggedInUser", result.username);
-
-            // Redirect to user dashboard after 1 second
-            setTimeout(() => {
-                window.location.href = `${result.role}-dashboard.html`;
-            }, 1000);
-
-        } catch (error) {
-            console.error("Login error:", error);
-            message.textContent = "Unable to connect to the server. Please verify your Render URL status.";
-            message.className = "message error";
-        }
-    });
-}
-
-// ==========================================
-// 2. TEACHER DASHBOARD LOGIC
-// ==========================================
 document.addEventListener("DOMContentLoaded", async () => {
-    // Check if on teacher dashboard page
     if (window.location.pathname.includes("teacher-dashboard.html")) {
         const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
-        const username = currentUser.username || localStorage.getItem("loggedInUser") || "dilip1";
-
+        const username = currentUser.username || "dilip1";
         await loadTeacherDashboard(username);
     }
 });
 
 async function loadTeacherDashboard(username) {
     try {
-        const response = await fetch(`${API_URL}/api/teacher-students/${username}`);
-        const result = await response.json();
+        const res = await fetch(`${API_URL}/api/teacher-dashboard/${username}`);
+        const data = await res.json();
 
-        if (!response.ok || !result.success) {
-            alert(result.message || "Failed to load teacher dashboard data.");
+        if (!data.success) {
+            alert(data.message || "Error loading teacher dashboard");
             return;
         }
 
-        // Update header & assigned class info
-        const teacherHeader = document.getElementById("teacherHeader");
-        const classAssignedText = document.getElementById("classAssignedText");
+        // Populate Profile
+        document.getElementById("profName").textContent = data.teacher.name || "N/A";
+        document.getElementById("profEdu").textContent = data.teacher.education || "N/A";
+        document.getElementById("profRole").textContent = data.teacher.role || "Teacher";
 
-        if (teacherHeader) {
-            teacherHeader.textContent = `Welcome, ${result.teacherName}`;
-        }
-        if (classAssignedText) {
-            classAssignedText.textContent = `Class Assigned: ${result.classAssigned}`;
-        }
-
-        // Populate table with students
-        const tbody = document.getElementById("studentTableBody");
-        if (!tbody) return;
-
-        tbody.innerHTML = "";
-
-        if (!result.students || result.students.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No students found for this class.</td></tr>`;
-            return;
-        }
-
-        result.students.forEach((student) => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${student["Roll No"] || "-"}</td>
-                <td>${student["Student Name"] || "-"}</td>
-                <td>${student["School ID"] || "-"}</td>
-                <td>${student["Father Name"] || "-"}</td>
-                <td>${student["Mother Name"] || "-"}</td>
-                <td>${student["Class"]} - ${student["Div"]}</td>
-            `;
-            tbody.appendChild(row);
-        });
-
-    } catch (error) {
-        console.error("Error loading teacher dashboard:", error);
+        globalStudents = data.students || [];
+        renderTable();
+    } catch (err) {
+        console.error("Dashboard Load Error:", err);
     }
 }
 
-// Client-side search filter for table
-function filterStudents() {
-    const input = document.getElementById("searchInput");
-    if (!input) return;
+function renderTable() {
+    const tbody = document.getElementById("studentTableBody");
+    const search = (document.getElementById("searchInput")?.value || "").toLowerCase();
+    const sortBy = document.getElementById("sortSelect")?.value || "roll";
 
-    const filter = input.value.toLowerCase();
-    const rows = document.querySelectorAll("#studentTableBody tr");
+    if (!tbody) return;
 
-    rows.forEach((row) => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(filter) ? "" : "none";
+    let students = globalStudents.filter(s => 
+        (s.name || "").toLowerCase().includes(search) || 
+        (s.roll_no || "").toString().includes(search)
+    );
+
+    if (sortBy === "name") students.sort((a, b) => a.name.localeCompare(b.name));
+    if (sortBy === "roll") students.sort((a, b) => a.roll_no - b.roll_no);
+    if (sortBy === "marks") students.sort((a, b) => (b.exam_marks || 0) - (a.exam_marks || 0));
+
+    tbody.innerHTML = "";
+
+    if (students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9">No student records found.</td></tr>`;
+        return;
+    }
+
+    students.forEach(s => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${s.roll_no}</td>
+                <td><strong>${s.name}</strong></td>
+                <td>
+                    <select id="att_${s.username}">
+                        <option value="Present" ${s.attendance === 'Present' ? 'selected' : ''}>Present</option>
+                        <option value="Absent" ${s.attendance === 'Absent' ? 'selected' : ''}>Absent</option>
+                    </select>
+                </td>
+                <td><input type="number" class="mark-input" id="ut1_${s.username}" value="${s.ut1_marks || 0}" min="0" max="20" style="width:50px;"></td>
+                <td><input type="number" class="mark-input" id="ut2_${s.username}" value="${s.ut2_marks || 0}" min="0" max="20" style="width:50px;"></td>
+                <td><input type="number" class="mark-input" id="ass_${s.username}" value="${s.assignment_marks || 0}" min="0" max="10" style="width:50px;"></td>
+                <td><input type="number" class="mark-input" id="oral_${s.username}" value="${s.oral_marks || 0}" min="0" max="10" style="width:50px;"></td>
+                <td><input type="number" class="mark-input" id="final_${s.username}" value="${s.exam_marks || 0}" min="0" max="40" style="width:50px;"></td>
+                <td><button class="tab-btn" style="padding: 4px 8px;" onclick="saveRecord('${s.username}')">Save</button></td>
+            </tr>
+        `;
     });
+}
+
+async function saveRecord(username) {
+    const att = document.getElementById(`att_${username}`).value;
+    const ut1 = document.getElementById(`ut1_${username}`).value;
+    const ut2 = document.getElementById(`ut2_${username}`).value;
+    const ass = document.getElementById(`ass_${username}`).value;
+    const oral = document.getElementById(`oral_${username}`).value;
+    const finalExam = document.getElementById(`final_${username}`).value;
+
+    try {
+        const res = await fetch(`${API_URL}/api/update-records`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: username,
+                attendance: att,
+                ut1_marks: ut1,
+                ut2_marks: ut2,
+                assignment_marks: ass,
+                oral_marks: oral,
+                exam_marks: finalExam
+            })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            alert("Record updated successfully!");
+        } else {
+            alert("Error saving record: " + data.message);
+        }
+    } catch (err) {
+        console.error("Save Error:", err);
+        alert("Server error while updating student marks.");
+    }
+}
+
+function switchTab(tabId) {
+    document.querySelectorAll(".tab-content").forEach(tab => tab.style.display = "none");
+    document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+    
+    const target = document.getElementById(tabId);
+    if (target) target.style.display = "block";
+    
+    event.currentTarget.classList.add("active");
 }
