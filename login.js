@@ -1,4 +1,4 @@
-const BACKEND_URL = 'https://swami-vivekanand-erp-backend2-11.onrender.com';
+const BACKEND_URL = 'https://swami-vivekanand-erp-backend2-12.onrender.com';
 
 document.addEventListener('DOMContentLoaded', () => { 
     let selectedRole = 'student';
