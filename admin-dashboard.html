@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Swami Vivekanand School ERP</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f8fb; color: #0d253f; display: flex; min-height: 100vh; }
+        
+        /* Sidebar Navigation - Navy & White */
+        .sidebar { width: 260px; background: #003366; color: #ffffff; padding: 20px 0; display: flex; flex-direction: column; border-right: 2px solid #002244; }
+        .sidebar h2 { text-align: center; font-size: 1.1rem; margin-bottom: 25px; padding: 0 15px 15px 15px; border-bottom: 1px solid #1a4d80; }
+        .nav-item { padding: 12px 20px; color: #d9e6f2; text-decoration: none; display: block; cursor: pointer; transition: 0.2s; font-weight: 500; }
+        .nav-item:hover, .nav-item.active { background: #0055a5; color: #ffffff; font-weight: bold; border-left: 5px solid #ffffff; }
+        .logout-btn { margin-top: auto; padding: 12px 20px; background: #002244; color: #ffffff; border: 1px solid #1a4d80; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .logout-btn:hover { background: #001122; }
+
+        /* Main Content Container */
+        .main-content { flex: 1; padding: 25px; overflow-y: auto; }
+        .section { display: none; background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 51, 102, 0.08); margin-bottom: 20px; border: 1px solid #e1e8ed; }
+        .section.active { display: block; }
+        h3 { color: #003366; margin-bottom: 15px; border-bottom: 2px solid #0055a5; padding-bottom: 8px; }
+
+        /* Summary Cards & Grids */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .card { background: #f0f6fb; padding: 15px; border-radius: 8px; border-left: 5px solid #0055a5; border-top: 1px solid #e1e8ed; border-right: 1px solid #e1e8ed; border-bottom: 1px solid #e1e8ed; }
+        .card label { font-size: 0.85rem; color: #4a6b82; font-weight: 600; }
+        .card p { font-size: 1.2rem; font-weight: bold; color: #003366; margin-top: 5px; }
+
+        /* Form Layouts */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 0.85rem; font-weight: bold; color: #003366; }
+        .form-group input, .form-group select { padding: 8px 12px; border: 1px solid #0055a5; border-radius: 4px; outline: none; font-size: 0.9rem; }
+
+        /* Data Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #ffffff; }
+        th, td { border: 1px solid #c8d6e5; padding: 10px; text-align: center; font-size: 0.88rem; }
+        th { background: #003366; color: #ffffff; font-weight: 600; }
+        tr:nth-child(even) { background: #f4f8fb; }
+
+        /* Buttons */
+        .btn { padding: 9px 18px; background: #0055a5; color: #ffffff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn:hover { background: #003366; }
+        .btn-danger { background: #990000; }
+        .btn-danger:hover { background: #660000; }
+
+        /* Floating AI Chatbot Widget */
+        .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: #003366; color: #ffffff; border: 2px solid #ffffff; padding: 14px 22px; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 51, 102, 0.3); z-index: 1000; }
+        .chat-window { position: fixed; bottom: 80px; right: 20px; width: 360px; height: 480px; background: #ffffff; border-radius: 10px; box-shadow: 0 5px 20px rgba(0, 51, 102, 0.25); display: none; flex-direction: column; z-index: 1000; overflow: hidden; border: 2px solid #003366; }
+        .chat-header { background: #003366; color: #ffffff; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #002244; }
+        .chat-body { flex: 1; padding: 12px; overflow-y: auto; background: #f4f8fb; font-size: 0.88rem; display: flex; flex-direction: column; gap: 8px; }
+        .chat-msg { max-width: 85%; padding: 8px 12px; border-radius: 12px; word-wrap: break-word; line-height: 1.4; }
+        .chat-msg.bot { background: #ffffff; color: #003366; align-self: flex-start; border: 1px solid #c8d6e5; }
+        .chat-msg.user { background: #0055a5; color: #ffffff; align-self: flex-end; }
+        .chat-footer { padding: 10px; background: #ffffff; border-top: 1px solid #c8d6e5; display: flex; gap: 6px; }
+        .chat-footer input { flex: 1; padding: 8px 12px; border: 1px solid #0055a5; border-radius: 4px; outline: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h2>Swami Vivekanand ERP</h2>
+        <a class="nav-item active" onclick="showSection('overviewSec', this)">Admin Overview</a>
+        <a class="nav-item" onclick="showSection('studentsSec', this)">Manage Students</a>
+        <a class="nav-item" onclick="showSection('teachersSec', this)">Manage Teachers</a>
+        <a class="nav-item" onclick="showSection('announcementsSec', this)">School Notice Board</a>
+        <a class="nav-item" onclick="showSection('holidaySec', this)">School Holidays</a>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+
+        <!-- 1. Admin Overview Section -->
+        <div id="overviewSec" class="section active">
+            <h3>Administrator Dashboard Profile</h3>
+            <div class="card-grid">
+                <div class="card"><label>Admin Name</label><p id="admName">Admin Staff</p></div>
+                <div class="card"><label>Designation</label><p id="admRole">System Administrator</p></div>
+                <div class="card"><label>Total Enrolled Students</label><p id="totalStudents">1,250</p></div>
+                <div class="card"><label>Total Teaching Staff</label><p id="totalTeachers">45</p></div>
+            </div>
+        </div>
+
+        <!-- 2. Manage Students Section -->
+        <div id="studentsSec" class="section">
+            <h3>Student Directory & Registration</h3>
+            
+            <!-- Registration Form -->
+            <div style="background: #f0f6fb; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #c8d6e5;">
+                <h4 style="color: #003366; margin-bottom: 10px;">Add New Student</h4>
+                <div class="form-grid">
+                    <div class="form-group"><label>Student Name</label><input type="text" id="stuName" placeholder="Full Name"></div>
+                    <div class="form-group"><label>Class & Division</label><input type="text" id="stuClass" placeholder="e.g. 5th A"></div>
+                    <div class="form-group"><label>Roll Number</label><input type="text" id="stuRoll" placeholder="e.g. 101"></div>
+                    <div class="form-group"><label>School ID / Password</label><input type="text" id="stuId" placeholder="e.g. SCH101"></div>
+                </div>
+                <button class="btn" onclick="addStudent()">Register Student</button>
+            </div>
+
+            <!-- Directory Table -->
+            <table>
+                <thead>
+                    <tr><th>Roll No</th><th>Student Name</th><th>Class & Div</th><th>School ID</th><th>Action</th></tr>
+                </thead>
+                <tbody id="studentTableBody">
+                    <tr><td>1</td><td>Nikhil Kokate</td><td>5th A</td><td>SCH484</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td></tr>
+                    <tr><td>2</td><td>Rutuparn Shinde</td><td>5th A</td><td>SCH563</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td></tr>
+                    <tr><td>3</td><td>Sarika Patil</td><td>5th A</td><td>SCH284</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 3. Manage Teachers Section -->
+        <div id="teachersSec" class="section">
+            <h3>Faculty Management</h3>
+            
+            <!-- Add Teacher Form -->
+            <div style="background: #f0f6fb; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #c8d6e5;">
+                <h4 style="color: #003366; margin-bottom: 10px;">Assign New Faculty Member</h4>
+                <div class="form-grid">
+                    <div class="form-group"><label>Teacher Name</label><input type="text" id="tchNameInput" placeholder="Teacher Full Name"></div>
+                    <div class="form-group"><label>Assigned Class</label><input type="text" id="tchClassInput" placeholder="e.g. 5th A"></div>
+                    <div class="form-group"><label>Qualifications</label><input type="text" id="tchEduInput" placeholder="e.g. M.Sc. B.Ed"></div>
+                    <div class="form-group"><label>Username</label><input type="text" id="tchUserInput" placeholder="e.g. teacher123"></div>
+                </div>
+                <button class="btn" onclick="addTeacher()">Add Faculty Member</button>
+            </div>
+
+            <!-- Teacher Directory Table -->
+            <table>
+                <thead>
+                    <tr><th>Teacher Name</th><th>Class Assigned</th><th>Education</th><th>Username</th><th>Action</th></tr>
+                </thead>
+                <tbody id="teacherTableBody">
+                    <tr><td>Dilip Patil</td><td>5th A</td><td>B.Com. B.Ed</td><td>dilip1</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td></tr>
+                    <tr><td>Shobha Joshi</td><td>5th B</td><td>D.Ed</td><td>shobha2</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td></tr>
+                    <tr><td>Vijay Shinde</td><td>5th C</td><td>M.Sc. B.Ed</td><td>vijay3</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 4. Notice Board / Announcements -->
+        <div id="announcementsSec" class="section">
+            <h3>School Notice Board</h3>
+            <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+                <input type="text" id="noticeInput" placeholder="Type school announcement or notice..." style="flex: 1; padding: 10px; border: 1px solid #0055a5; border-radius: 4px;">
+                <button class="btn" onclick="postNotice()">Publish Notice</button>
+            </div>
+            <ul id="noticeList" style="list-style-type: none;">
+                <li style="background: #f4f8fb; padding: 12px; border-left: 4px solid #0055a5; margin-bottom: 10px; border-radius: 4px;">
+                    <strong>[2026-08-20]:</strong> Terminal examination schedules for standard 5th to 10th have been uploaded.
+                </li>
+                <li style="background: #f4f8fb; padding: 12px; border-left: 4px solid #0055a5; margin-bottom: 10px; border-radius: 4px;">
+                    <strong>[2026-08-15]:</strong> Independence Day celebration starts at 7:30 AM in the school main ground.
+                </li>
+            </ul>
+        </div>
+
+        <!-- 5. Holiday Section -->
+        <div id="holidaySec" class="section">
+            <h3>Academic School Holidays</h3>
+            <table>
+                <thead><tr><th>Date</th><th>Occasion</th><th>Day</th></tr></thead>
+                <tbody>
+                    <tr><td>2026-08-27</td><td>Ganesh Chaturthi</td><td>Thursday</td></tr>
+                    <tr><td>2026-10-02</td><td>Mahatma Gandhi Jayanti</td><td>Friday</td></tr>
+                    <tr><td>2026-11-08</td><td>Diwali Festival</td><td>Sunday</td></tr>
+                    <tr><td>2026-12-25</td><td>Christmas</td><td>Friday</td></tr>
+                    <tr><td>2026-01-26</td><td>Republic Day</td><td>Monday</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- 6. AI Admin Assistant Chatbot Widget -->
+    <button class="chatbot-btn" onclick="toggleChat()">💬 Admin Assistant</button>
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <span>AI Admin Assistant</span>
+            <button onclick="toggleChat()" style="background:none; border:none; color:#ffffff; font-weight:bold; cursor:pointer;">✕</button>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="chat-msg bot">Welcome Administrator! You can ask me queries regarding total admissions, faculty assignments, or system metrics.</div>
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="chatInput" placeholder="Ask a question..." onkeypress="if(event.key==='Enter') sendChat()">
+            <button class="btn" onclick="sendChat()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize User Session
+        document.addEventListener('DOMContentLoaded', () => {
+            const rawUser = localStorage.getItem('userData');
+            let user = rawUser ? JSON.parse(rawUser) : { name: "Admin Staff", designation: "System Administrator" };
+
+            document.getElementById('admName').innerText = user.name || "Admin Staff";
+            document.getElementById('admRole').innerText = user.designation || "System Administrator";
+        });
+
+        // Tab Navigation Logic
+        function showSection(id, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // Add Student
+        function addStudent() {
+            const name = document.getElementById('stuName').value.trim();
+            const cls = document.getElementById('stuClass').value.trim();
+            const roll = document.getElementById('stuRoll').value.trim();
+            const id = document.getElementById('stuId').value.trim();
+
+            if (!name || !cls || !roll || !id) {
+                alert("Please complete all student fields.");
+                return;
+            }
+
+            const tbody = document.getElementById('studentTableBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${roll}</td><td>${name}</td><td>${cls}</td><td>${id}</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td>`;
+            tbody.appendChild(tr);
+
+            document.getElementById('stuName').value = '';
+            document.getElementById('stuClass').value = '';
+            document.getElementById('stuRoll').value = '';
+            document.getElementById('stuId').value = '';
+        }
+
+        // Add Teacher
+        function addTeacher() {
+            const name = document.getElementById('tchNameInput').value.trim();
+            const cls = document.getElementById('tchClassInput').value.trim();
+            const edu = document.getElementById('tchEduInput').value.trim();
+            const user = document.getElementById('tchUserInput').value.trim();
+
+            if (!name || !cls || !edu || !user) {
+                alert("Please complete all faculty fields.");
+                return;
+            }
+
+            const tbody = document.getElementById('teacherTableBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${name}</td><td>${cls}</td><td>${edu}</td><td>${user}</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td>`;
+            tbody.appendChild(tr);
+
+            document.getElementById('tchNameInput').value = '';
+            document.getElementById('tchClassInput').value = '';
+            document.getElementById('tchEduInput').value = '';
+            document.getElementById('tchUserInput').value = '';
+        }
+
+        // Delete Row
+        function deleteRow(btn) {
+            btn.closest('tr').remove();
+        }
+
+        // Post Notice
+        function postNotice() {
+            const input = document.getElementById('noticeInput');
+            const msg = input.value.trim();
+            if(!msg) return;
+
+            const list = document.getElementById('noticeList');
+            const li = document.createElement('li');
+            li.style.cssText = "background: #f4f8fb; padding: 12px; border-left: 4px solid #0055a5; margin-bottom: 10px; border-radius: 4px;";
+            
+            const today = new Date().toISOString().split('T')[0];
+            li.innerHTML = `<strong>[${today}]:</strong> ${msg}`;
+            list.prepend(li);
+
+            input.value = '';
+        }
+
+        // Chatbot Controls
+        function toggleChat() {
+            const win = document.getElementById('chatWindow');
+            win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if(!msg) return;
+
+            appendMsg(msg, 'user');
+            input.value = '';
+
+            let response = "";
+            const q = msg.toLowerCase();
+
+            if (q.includes("student") || q.includes("admission")) {
+                response = "There are currently 1,250 registered students across grades 5th to 10th.";
+            } else if (q.includes("teacher") || q.includes("staff")) {
+                response = "There are 45 active teaching staff members assigned across 18 class divisions.";
+            } else if (q.includes("notice") || q.includes("announcement")) {
+                response = "You can publish real-time notices under the 'School Notice Board' tab.";
+            } else {
+                response = "I am your Admin Assistant. I can assist you with system stats, faculty records, and student directory queries.";
+            }
+
+            setTimeout(() => appendMsg(response, 'bot'), 400);
+        }
+
+        function appendMsg(text, type) {
+            const body = document.getElementById('chatBody');
+            const div = document.createElement('div');
+            div.className = `chat-msg ${type}`;
+            div.innerHTML = text;
+            body.appendChild(div);
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
