@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Swami Vivekanand School ERP</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f8fb; color: #0d253f; display: flex; min-height: 100vh; }
+        
+        /* Sidebar Navigation - Navy Blue & White */
+        .sidebar { width: 260px; background: #003366; color: #ffffff; padding: 20px 0; display: flex; flex-direction: column; border-right: 2px solid #002244; }
+        .sidebar h2 { text-align: center; font-size: 1.1rem; margin-bottom: 25px; padding: 0 15px 15px 15px; border-bottom: 1px solid #1a4d80; }
+        .nav-item { padding: 12px 20px; color: #d9e6f2; text-decoration: none; display: block; cursor: pointer; transition: 0.2s; font-weight: 500; }
+        .nav-item:hover, .nav-item.active { background: #0055a5; color: #ffffff; font-weight: bold; border-left: 5px solid #ffffff; }
+        .logout-btn { margin-top: auto; padding: 12px 20px; background: #002244; color: #ffffff; border: 1px solid #1a4d80; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .logout-btn:hover { background: #001122; }
+
+        /* Main Content Container */
+        .main-content { flex: 1; padding: 25px; overflow-y: auto; }
+        .section { display: none; background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 51, 102, 0.08); margin-bottom: 20px; border: 1px solid #e1e8ed; }
+        .section.active { display: block; }
+        h3 { color: #003366; margin-bottom: 15px; border-bottom: 2px solid #0055a5; padding-bottom: 8px; }
+
+        /* Profile Cards */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .card { background: #f0f6fb; padding: 15px; border-radius: 8px; border-left: 5px solid #0055a5; border-top: 1px solid #e1e8ed; border-right: 1px solid #e1e8ed; border-bottom: 1px solid #e1e8ed; }
+        .card label { font-size: 0.85rem; color: #4a6b82; font-weight: 600; }
+        .card p { font-size: 1.1rem; font-weight: bold; color: #003366; margin-top: 5px; }
+
+        /* Data Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #ffffff; }
+        th, td { border: 1px solid #c8d6e5; padding: 10px; text-align: center; font-size: 0.88rem; }
+        th { background: #003366; color: #ffffff; font-weight: 600; }
+        tr:nth-child(even) { background: #f4f8fb; }
+        
+        /* Inputs & Buttons */
+        .btn { padding: 8px 16px; background: #0055a5; color: #ffffff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn:hover { background: #003366; }
+        .btn-success { background: #006633; }
+        .btn-success:hover { background: #004d26; }
+        .mark-input { width: 60px; padding: 5px; text-align: center; border: 1px solid #0055a5; border-radius: 4px; font-weight: bold; }
+        
+        .att-radio { cursor: pointer; transform: scale(1.2); accent-color: #0055a5; }
+
+        /* Floating AI Chatbot Widget */
+        .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: #003366; color: #ffffff; border: 2px solid #ffffff; padding: 14px 22px; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 51, 102, 0.3); z-index: 1000; }
+        .chat-window { position: fixed; bottom: 80px; right: 20px; width: 360px; height: 480px; background: #ffffff; border-radius: 10px; box-shadow: 0 5px 20px rgba(0, 51, 102, 0.25); display: none; flex-direction: column; z-index: 1000; overflow: hidden; border: 2px solid #003366; }
+        .chat-header { background: #003366; color: #ffffff; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #002244; }
+        .chat-body { flex: 1; padding: 12px; overflow-y: auto; background: #f4f8fb; font-size: 0.88rem; display: flex; flex-direction: column; gap: 8px; }
+        .chat-msg { max-width: 85%; padding: 8px 12px; border-radius: 12px; word-wrap: break-word; line-height: 1.4; }
+        .chat-msg.bot { background: #ffffff; color: #003366; align-self: flex-start; border: 1px solid #c8d6e5; }
+        .chat-msg.user { background: #0055a5; color: #ffffff; align-self: flex-end; }
+        .chat-footer { padding: 10px; background: #ffffff; border-top: 1px solid #c8d6e5; display: flex; gap: 6px; }
+        .chat-footer input { flex: 1; padding: 8px 12px; border: 1px solid #0055a5; border-radius: 4px; outline: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h2>Swami Vivekanand ERP</h2>
+        <a class="nav-item active" onclick="showSection('profileSec', this)">Profile & Students</a>
+        <a class="nav-item" onclick="showSection('attendanceSec', this)">Mark Attendance</a>
+        <a class="nav-item" onclick="showSection('marksSec', this)">Mark Student Marks</a>
+        <a class="nav-item" onclick="showSection('timetableSec', this)">My Timetable</a>
+        <a class="nav-item" onclick="showSection('holidaySec', this)">School Holidays</a>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+
+        <!-- 1. Profile & Student List Section -->
+        <div id="profileSec" class="section active">
+            <h3>Teacher Profile</h3>
+            <div class="card-grid">
+                <div class="card"><label>Teacher Name</label><p id="tchName">Dilip Patil</p></div>
+                <div class="card"><label>Education</label><p id="tchEdu">B.Com. B.Ed</p></div>
+                <div class="card"><label>Assigned Class Teacher</label><p id="tchClass">5th A</p></div>
+                <div class="card"><label>Role</label><p id="tchRole">Class Teacher</p></div>
+            </div>
+
+            <h3 style="margin-top: 25px;">Assigned Class Student List (<span id="assignedClassLabel">5th A</span>)</h3>
+            <table>
+                <thead>
+                    <tr><th>Roll No</th><th>Student Name</th><th>Father Name</th><th>Mother Name</th><th>School ID</th></tr>
+                </thead>
+                <tbody id="studentListTable">
+                    <!-- Populated via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 2. Mark Attendance Section -->
+        <div id="attendanceSec" class="section">
+            <h3>Mark Daily Attendance</h3>
+            <div style="margin-bottom: 15px; display: flex; gap: 15px; align-items: center;">
+                <label><b>Select Date:</b></label>
+                <input type="date" id="attDate" value="2026-08-21" style="padding: 6px 12px; border: 1px solid #0055a5; border-radius: 4px;">
+                <button class="btn btn-success" onclick="saveAttendance()">Submit Attendance</button>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>Roll No</th><th>Student Name</th><th>Present</th><th>Absent</th></tr>
+                </thead>
+                <tbody id="attendanceTable">
+                    <!-- Populated via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 3. Mark Student Marks Section -->
+        <div id="marksSec" class="section">
+            <h3>Enter Academic Marks</h3>
+            <div style="margin-bottom: 15px; display: flex; gap: 15px; align-items: center;">
+                <label><b>Subject:</b></label>
+                <select id="subjSelect" style="padding: 6px 12px; border: 1px solid #0055a5; border-radius: 4px; font-weight: bold;">
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="English">English</option>
+                    <option value="Science">Science</option>
+                    <option value="Hindi">Hindi</option>
+                    <option value="Marathi">Marathi</option>
+                </select>
+                <button class="btn btn-success" onclick="saveMarks()">Save All Marks</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Roll No</th>
+                        <th>Student Name</th>
+                        <th>Unit Test 1 (20)</th>
+                        <th>Unit Test 2 (20)</th>
+                        <th>Assignment (10)</th>
+                        <th>Oral Marks (10)</th>
+                    </tr>
+                </thead>
+                <tbody id="marksTable">
+                    <!-- Populated via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 4. Teacher Timetable Section -->
+        <div id="timetableSec" class="section">
+            <h3>Teacher Timetable</h3>
+            <div id="timetableContainer">
+                <table>
+                    <thead>
+                        <tr><th>Time Slot</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>9:00 - 9:40</td><td>5th A (Maths)</td><td>9th B (Maths)</td><td>Free</td><td>6th B (Maths)</td><td>Free</td><td>10th B (Maths)</td></tr>
+                        <tr><td>9:40 - 10:20</td><td>9th B (Maths)</td><td>6th C (Maths)</td><td>Free</td><td>6th A (Maths)</td><td>5th C (Maths)</td><td>5th B (Maths)</td></tr>
+                        <tr><td>10:20 - 11:00</td><td>Free</td><td>5th A (Maths)</td><td>7th A (Maths)</td><td>Free</td><td>6th B (Maths)</td><td>Free</td></tr>
+                        <tr><td>11:00 - 11:40</td><td>8th A (Maths)</td><td>Free</td><td>5th A (Maths)</td><td>8th C (Maths)</td><td>Free</td><td>7th C (Maths)</td></tr>
+                        <tr><td>11:40 - 12:00</td><td colspan="6" style="font-weight: bold; background: #e6f2ff; color: #003366;">RECESS BREAK</td></tr>
+                        <tr><td>12:00 - 12:40</td><td>Free</td><td>8th B (Maths)</td><td>Free</td><td>5th A (Maths)</td><td>9th C (Maths)</td><td>Free</td></tr>
+                        <tr><td>12:40 - 13:20</td><td>7th B (Maths)</td><td>Free</td><td>10th A (Maths)</td><td>Free</td><td>5th A (Maths)</td><td>8th B (Maths)</td></tr>
+                        <tr><td>13:20 - 14:00</td><td>6th A (Maths)</td><td>Free</td><td>Free</td><td>7th A (Maths)</td><td>Free</td><td>5th A (Maths)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 5. Holiday Section -->
+        <div id="holidaySec" class="section">
+            <h3>Academic School Holidays</h3>
+            <table>
+                <thead><tr><th>Date</th><th>Occasion</th><th>Day</th></tr></thead>
+                <tbody>
+                    <tr><td>2026-08-27</td><td>Ganesh Chaturthi</td><td>Thursday</td></tr>
+                    <tr><td>2026-10-02</td><td>Mahatma Gandhi Jayanti</td><td>Friday</td></tr>
+                    <tr><td>2026-11-08</td><td>Diwali Festival</td><td>Sunday</td></tr>
+                    <tr><td>2026-12-25</td><td>Christmas</td><td>Friday</td></tr>
+                    <tr><td>2026-01-26</td><td>Republic Day</td><td>Monday</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- 6. AI Teacher Assistant Chatbot -->
+    <button class="chatbot-btn" onclick="toggleChat()">💬 Teacher Assistant</button>
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <span>AI Teacher Assistant</span>
+            <button onclick="toggleChat()" style="background:none; border:none; color:#ffffff; font-weight:bold; cursor:pointer;">✕</button>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="chat-msg bot">Hello Teacher! You can ask me questions like:
+                <br>• How to mark attendance?
+                <br>• Who are the top 3 students?
+                <br>• Who are the failed students?
+                <br>• How many students passed?
+            </div>
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="chatInput" placeholder="Ask a question..." onkeypress="if(event.key==='Enter') sendChat()">
+            <button class="btn" onclick="sendChat()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Sample Student Dataset corresponding to student_data_maharashtra.xlsx
+        const studentDatabase = [
+            { roll: 1, name: "Nikhil Kokate", father: "Omkar Kokate", mother: "Bhagyashree Kokate", class: "5th A", sch_id: "SCH484", ut1: 18, ut2: 17, assign: 9, oral: 9, total: 53 },
+            { roll: 2, name: "Rutuparn Shinde", father: "Tejas Shinde", mother: "Deepa Shinde", class: "5th A", sch_id: "SCH563", ut1: 19, ut2: 18, assign: 10, oral: 10, total: 57 },
+            { roll: 3, name: "Sarika Patil", father: "Ajinkya Patil", mother: "Pooja Patil", class: "5th A", sch_id: "SCH284", ut1: 15, ut2: 14, assign: 8, oral: 8, total: 45 },
+            { roll: 4, name: "Rutuja Joshi", father: "Suraj Joshi", mother: "Swati Joshi", class: "5th A", sch_id: "SCH468", ut1: 7, ut2: 6, assign: 4, oral: 3, total: 20 },
+            { roll: 5, name: "Rutuparn Chougule", father: "Ganesh Chougule", mother: "Manasi Chougule", class: "5th A", sch_id: "SCH218", ut1: 20, ut2: 19, assign: 10, oral: 9, total: 58 },
+            { roll: 6, name: "Amit Kulkarni", father: "Prakash Kulkarni", mother: "Anjali Kulkarni", class: "5th A", sch_id: "SCH105", ut1: 16, ut2: 17, assign: 8, oral: 9, total: 50 },
+            { roll: 7, name: "Sneha Pawar", father: "Sanjay Pawar", mother: "Sunita Pawar", class: "5th A", sch_id: "SCH302", ut1: 5, ut2: 6, assign: 3, oral: 4, total: 18 }
+        ];
+
+        // Load Session and Populate Profile and Tables
+        document.addEventListener('DOMContentLoaded', () => {
+            const rawUser = localStorage.getItem('userData');
+            let user = rawUser ? JSON.parse(rawUser) : { name: "Dilip Patil", class_assigned: "5th A", role: "Class Teacher", education: "B.Com. B.Ed" };
+
+            document.getElementById('tchName').innerText = user.name || "Dilip Patil";
+            document.getElementById('tchEdu').innerText = user.education || "B.Com. B.Ed";
+            document.getElementById('tchClass').innerText = user.class_assigned || "5th A";
+            document.getElementById('tchRole').innerText = user.role || "Class Teacher";
+            document.getElementById('assignedClassLabel').innerText = user.class_assigned || "5th A";
+
+            renderStudentTables();
+        });
+
+        // Tab Navigation Logic
+        function showSection(id, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // Render Student List, Attendance Table, and Marks Table
+        function renderStudentTables() {
+            let listHtml = "", attHtml = "", marksHtml = "";
+
+            studentDatabase.forEach(s => {
+                listHtml += `<tr><td>${s.roll}</td><td>${s.name}</td><td>${s.father}</td><td>${s.mother}</td><td>${s.sch_id}</td></tr>`;
+                
+                attHtml += `<tr>
+                    <td>${s.roll}</td>
+                    <td>${s.name}</td>
+                    <td><input type="radio" name="att_${s.roll}" value="Present" class="att-radio" checked></td>
+                    <td><input type="radio" name="att_${s.roll}" value="Absent" class="att-radio"></td>
+                </tr>`;
+
+                marksHtml += `<tr>
+                    <td>${s.roll}</td>
+                    <td>${s.name}</td>
+                    <td><input type="number" class="mark-input" value="${s.ut1}" max="20"></td>
+                    <td><input type="number" class="mark-input" value="${s.ut2}" max="20"></td>
+                    <td><input type="number" class="mark-input" value="${s.assign}" max="10"></td>
+                    <td><input type="number" class="mark-input" value="${s.oral}" max="10"></td>
+                </tr>`;
+            });
+
+            document.getElementById('studentListTable').innerHTML = listHtml;
+            document.getElementById('attendanceTable').innerHTML = attHtml;
+            document.getElementById('marksTable').innerHTML = marksHtml;
+        }
+
+        function saveAttendance() {
+            alert("Attendance recorded successfully!");
+        }
+
+        function saveMarks() {
+            alert("Student marks saved successfully!");
+        }
+
+        // AI Chatbot Functions
+        function toggleChat() {
+            const win = document.getElementById('chatWindow');
+            win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if(!msg) return;
+
+            appendMsg(msg, 'user');
+            input.value = '';
+
+            let response = "";
+            const q = msg.toLowerCase();
+
+            if (q.includes("attendance") || q.includes("how to mark")) {
+                response = "To mark attendance, click on 'Mark Attendance' in the left menu, choose Present/Absent radio buttons for each student, and click 'Submit Attendance'.";
+            } else if (q.includes("top three") || q.includes("top 3") || q.includes("topper")) {
+                response = "<b>Top 3 Students in 5th A:</b><br>1. Rutuparn Chougule (58/60)<br>2. Rutuparn Shinde (57/60)<br>3. Nikhil Kokate (53/60)";
+            } else if (q.includes("fail") || q.includes("failed")) {
+                response = "<b>Failed Students (below 35%):</b><br>1. Rutuja Joshi (20/60)<br>2. Sneha Pawar (18/60)";
+            } else if (q.includes("pass") || q.includes("passed") || q.includes("how many")) {
+                response = "<b>Pass Statistics:</b><br>Total Students: 7<br>Passed: 5 (71.4%)<br>Failed: 2 (28.6%)";
+            } else {
+                response = "I can assist you with attendance guidelines, identifying top performing or failed students, and pass percentage statistics.";
+            }
+
+            setTimeout(() => appendMsg(response, 'bot'), 400);
+        }
+
+        function appendMsg(text, type) {
+            const body = document.getElementById('chatBody');
+            const div = document.createElement('div');
+            div.className = `chat-msg ${type}`;
+            div.innerHTML = text;
+            body.appendChild(div);
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
