@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f4f7fe;
+            color: #2b3674;
+            display: flex;
+            min-height: 100vh;
+        }
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: #ffffff;
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .sidebar h2 {
+            font-size: 20px;
+            color: #4318ff;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e5f2;
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 15px;
+            font-weight: 600;
+            color: #a3ed00;
+            color: #7090b0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .nav-btn.active, .nav-btn:hover {
+            background-color: #4318ff;
+            color: #ffffff;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .tab-content {
+            display: none;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Forms & Tables */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0e5f2;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .submit-btn {
+            background-color: #4318ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .submit-btn:hover {
+            background-color: #3311db;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e5f2;
+        }
+        table th {
+            background-color: #f7fafc;
+            color: #a318ff;
+            color: #2b3674;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h2>Teacher Portal</h2>
+        <button class="nav-btn active" onclick="switchTab('attendance')">Mark Attendance</button>
+        <button class="nav-btn" onclick="switchTab('marks')">Upload Marks</button>
+        <button class="nav-btn" onclick="switchTab('timetable')">Manage Timetable</button>
+        <button class="nav-btn" onclick="switchTab('announcements')">Announcements</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1 id="page-title">Mark Attendance</h1>
+            <span>Welcome, <strong>Teacher</strong></span>
+        </div>
+
+        <!-- 1. Mark Attendance Section -->
+        <div id="attendance" class="tab-content active">
+            <h3>Daily Attendance Record</h3>
+            <form id="attendance-form" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label>Select Date</label>
+                    <input type="date" required>
+                </div>
+                <div class="form-group">
+                    <label>Select Class / Division</label>
+                    <select required>
+                        <option value="">-- Choose Class --</option>
+                        <option value="TY-AIDS">TY - AIDS</option>
+                        <option value="SY-AIDS">SY - AIDS</option>
+                    </select>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Roll No</th>
+                            <th>Student Name</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>60</td>
+                            <td>Ritu Shidhreddy</td>
+                            <td>
+                                <select><option>Present</option><option>Absent</option></select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>67</td>
+                            <td>Monika Kale</td>
+                            <td>
+                                <select><option>Present</option><option>Absent</option></select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>69</td>
+                            <td>Nimita Dehade</td>
+                            <td>
+                                <select><option>Present</option><option>Absent</option></select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>72</td>
+                            <td>Sakshi Gaikwad</td>
+                            <td>
+                                <select><option>Present</option><option>Absent</option></select>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <br>
+                <button type="button" class="submit-btn">Save Attendance</button>
+            </form>
+        </div>
+
+        <!-- 2. Upload Marks Section -->
+        <div id="marks" class="tab-content">
+            <h3>Upload Student Marks</h3>
+            <form id="marks-form" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input type="text" placeholder="e.g. Research Methodology, AI" required>
+                </div>
+                <div class="form-group">
+                    <label>Exam Type</label>
+                    <select required>
+                        <option value="CIE 1">CIE 1</option>
+                        <option value="CIE 2">CIE 2</option>
+                        <option value="Semester End">Semester End</option>
+                    </select>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Roll No</th>
+                            <th>Student Name</th>
+                            <th>Marks Obtained (Out of 100)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>60</td>
+                            <td>Ritu Shidhreddy</td>
+                            <td><input type="number" max="100" min="0"></td>
+                        </tr>
+                        <tr>
+                            <td>67</td>
+                            <td>Monika Kale</td>
+                            <td><input type="number" max="100" min="0"></td>
+                        </tr>
+                        <tr>
+                            <td>69</td>
+                            <td>Nimita Dehade</td>
+                            <td><input type="number" max="100" min="0"></td>
+                        </tr>
+                        <tr>
+                            <td>72</td>
+                            <td>Sakshi Gaikwad</td>
+                            <td><input type="number" max="100" min="0"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <br>
+                <button type="button" class="submit-btn">Submit Marks</button>
+            </form>
+        </div>
+
+        <!-- 3. Timetable Section -->
+        <div id="timetable" class="tab-content">
+            <h3>Class Schedule Management</h3>
+            <p style="margin-top: 10px; color: #7090b0;">Update daily class lectures and timings.</p>
+        </div>
+
+        <!-- 4. Announcements Section -->
+        <div id="announcements" class="tab-content">
+            <h3>Broadcast Notice</h3>
+            <form style="margin-top: 15px;">
+                <div class="form-group">
+                    <label>Notice Title</label>
+                    <input type="text" placeholder="e.g. CIE 1 Exam Schedule" required>
+                </div>
+                <div class="form-group">
+                    <label>Notice Content</label>
+                    <textarea rows="4" placeholder="Enter notice details here..."></textarea>
+                </div>
+                <button type="button" class="submit-btn">Publish Notice</button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Remove active class from buttons
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Show current tab & activate button
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            // Update header title
+            const titles = {
+                'attendance': 'Mark Attendance',
+                'marks': 'Upload Marks',
+                'timetable': 'Manage Timetable',
+                'announcements': 'Broadcast Notice'
+            };
+            document.getElementById('page-title').innerText = titles[tabId];
+        }
+    </script>
+</body>
+</html>
