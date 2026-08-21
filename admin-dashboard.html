@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Swami Vivekanand School ERP</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+    }
+    .dashboard-container {
+      max-width: 1250px;
+      margin: 0 auto;
+    }
+    .profile-card {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .profile-card h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .stats-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .card h3 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      color: #666;
+    }
+    .card p {
+      margin: 0;
+      font-size: 24px;
+      font-weight: bold;
+      color: #007bff;
+    }
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 10px 18px;
+      border: none;
+      background: #e0e0e0;
+      cursor: pointer;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    .tab-btn.active {
+      background: #007bff;
+      color: white;
+    }
+    .tab-content {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      gap: 10px;
+    }
+    .controls-bar input, .controls-bar select {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .data-table th, .data-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    .data-table th {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-action {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .btn-edit { background: #ffc107; color: #000; }
+    .btn-delete { background: #dc3545; color: #fff; }
+    .chatbot-box {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #chatLogs {
+      height: 120px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      padding: 10px;
+      background: #fafafa;
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+    #chatInput {
+      width: calc(100% - 130px);
+      padding: 8px;
+    }
+    .chatbot-box button {
+      padding: 8px 15px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-container">
+    
+    <!-- Admin Header & Profile Section -->
+    <header class="profile-card">
+      <h2 id="adminHeader">Admin Dashboard</h2>
+      <p><strong>Administrator Name:</strong> <span id="adminName">Loading...</span></p>
+      <p><strong>Designation:</strong> <span id="adminDesignation">Loading...</span></p>
+    </header>
+
+    <!-- Quick Overview Stats -->
+    <div class="stats-cards">
+      <div class="card">
+        <h3>Total Students</h3>
+        <p id="totalStudentsCount">0</p>
+      </div>
+      <div class="card">
+        <h3>Total Teachers</h3>
+        <p id="totalTeachersCount">0</p>
+      </div>
+      <div class="card">
+        <h3>Fees Collected</h3>
+        <p id="totalFeesCollected">₹0</p>
+      </div>
+      <div class="card">
+        <h3>Pending Fees</h3>
+        <p id="totalFeesPending" style="color: #dc3545;">₹0</p>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchAdminTab('studentsTab')">Manage Students</button>
+      <button class="tab-btn" onclick="switchAdminTab('teachersTab')">Manage Teachers</button>
+      <button class="tab-btn" onclick="switchAdminTab('feesOverviewTab')">School Fees Master</button>
+      <button class="tab-btn" onclick="switchAdminTab('holidaysAdminTab')">Manage Holidays</button>
+    </div>
+
+    <!-- Tab 1: Student Management -->
+    <section id="studentsTab" class="tab-content">
+      <div class="controls-bar">
+        <h3>All Enrolled Students</h3>
+        <input type="text" id="adminStudentSearch" placeholder="Search by name, roll, or class..." onkeyup="filterAdminStudents()">
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Roll No</th>
+            <th>Student Name</th>
+            <th>School ID</th>
+            <th>Class & Div</th>
+            <th>Father Name</th>
+            <th>Mother Name</th>
+            <th>Fee Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="adminStudentTableBody">
+          <tr>
+            <td colspan="8">Loading student records...</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Tab 2: Teacher Management -->
+    <section id="teachersTab" class="tab-content" style="display: none;">
+      <div class="controls-bar">
+        <h3>Teaching Staff Directory</h3>
+        <input type="text" id="adminTeacherSearch" placeholder="Search teacher or subject..." onkeyup="filterAdminTeachers()">
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>S.No</th>
+            <th>Teacher Name</th>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Assigned Class</th>
+            <th>Education</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="adminTeacherTableBody">
+          <tr>
+            <td colspan="7">Loading teacher directory...</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Tab 3: Fees Master Overview -->
+    <section id="feesOverviewTab" class="tab-content" style="display: none;">
+      <h3>School-Wide Fee Collection Tracker</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Roll No</th>
+            <th>Student Name</th>
+            <th>Class</th>
+            <th>Paid Amount</th>
+            <th>Pending Amount</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="adminFeesTableBody">
+          <tr>
+            <td colspan="6">Loading fee analytics...</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Tab 4: Holiday Management -->
+    <section id="holidaysAdminTab" class="tab-content" style="display: none;">
+      <h3>School Holiday Schedule</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Holiday Name</th>
+            <th>Day</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>26 Jan 2026</td><td>Republic Day</td><td>Monday</td></tr>
+          <tr><td>19 Feb 2026</td><td>Chhatrapati Shivaji Maharaj Jayanti</td><td>Thursday</td></tr>
+          <tr><td>08 Mar 2026</td><td>Mahashivratri</td><td>Sunday</td></tr>
+          <tr><td>25 Mar 2026</td><td>Holi</td><td>Wednesday</td></tr>
+          <tr><td>14 Apr 2026</td><td>Dr. Ambedkar Jayanti</td><td>Tuesday</td></tr>
+          <tr><td>15 Aug 2026</td><td>Independence Day</td><td>Saturday</td></tr>
+          <tr><td>02 Oct 2026</td><td>Mahatma Gandhi Jayanti</td><td>Friday</td></tr>
+          <tr><td>01 Nov 2026</td><td>Diwali</td><td>Sunday</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Chatbot Section -->
+    <div class="chatbot-box">
+      <h3>AI Administrative Assistant</h3>
+      <div id="chatLogs"></div>
+      <input type="text" id="chatInput" placeholder="e.g., 'Show total unpaid fees' or 'Filter class 5th A students'">
+      <button onclick="sendAdminChatbotCommand()">Send</button>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
