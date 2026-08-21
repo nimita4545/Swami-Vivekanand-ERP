@@ -1,32 +1,23 @@
-// Define your deployed backend API URL
 const BACKEND_URL = 'https://swami-vivekanand-erp-backend2-11.onrender.com';
 
 document.addEventListener('DOMContentLoaded', () => { 
-    // Default role state matches the default active HTML button
     let selectedRole = 'student';
 
     const roleButtons = document.querySelectorAll('.roles .role');
     const loginForm = document.getElementById('loginForm');
     const messageElement = document.getElementById('message');
 
-    // 1. Role Selection Click Handler
+    // Role Selection Click Handler
     roleButtons.forEach(button => {
         button.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent any form submission side-effects
-            
-            // Remove 'active' class from all role buttons
+            e.preventDefault();
             roleButtons.forEach(btn => btn.classList.remove('active'));
-            
-            // Highlight the clicked button
             button.classList.add('active');
-            
-            // Read data-role ('student', 'teacher', or 'admin')
             selectedRole = button.getAttribute('data-role');
-            console.log("Selected Role updated to:", selectedRole);
         });
     });
 
-    // 2. Form Submission Handler
+    // Form Submission Handler
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -45,9 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`${BACKEND_URL}/api/login`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     username: username,
                     password: password,
@@ -65,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('userData', JSON.stringify(data.user));
                 localStorage.setItem('userRole', data.role);
 
-                // Redirect based on selected role
+                // Redirect to respective dashboard page
                 setTimeout(() => {
                     window.location.href = `${data.role}_dashboard.html`;
                 }, 1000);
