@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Dashboard</title>
+    <title>Teacher Management Dashboard</title>
     <style>
         * {
             box-sizing: border-box;
@@ -17,31 +17,50 @@
             display: flex;
             min-height: 100vh;
         }
-        /* Sidebar */
         .sidebar {
-            width: 250px;
+            width: 260px;
             background: #ffffff;
             padding: 20px;
             box-shadow: 2px 0 10px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 12px;
         }
         .sidebar h2 {
-            font-size: 20px;
+            font-size: 18px;
             color: #4318ff;
             text-align: center;
             padding-bottom: 10px;
             border-bottom: 1px solid #e0e5f2;
+        }
+        .teacher-select-box {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #e0e5f2;
+            margin-bottom: 10px;
+        }
+        .teacher-select-box label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #7090b0;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .teacher-select-box select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            font-size: 13px;
         }
         .nav-btn {
             background: none;
             border: none;
             padding: 12px 15px;
             text-align: left;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
-            color: #a3ed00;
             color: #7090b0;
             border-radius: 10px;
             cursor: pointer;
@@ -52,18 +71,51 @@
             color: #ffffff;
         }
 
-        /* Main Content Area */
         .main-content {
             flex: 1;
-            padding: 30px;
+            padding: 25px;
             overflow-y: auto;
         }
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
+        
+        /* Profile Card Styling */
+        .profile-card {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        .profile-item label {
+            font-size: 12px;
+            color: #7090b0;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .profile-item p {
+            font-size: 15px;
+            font-weight: 700;
+            color: #2b3674;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e9f2ff;
+            color: #4318ff;
+        }
+
         .tab-content {
             display: none;
             background: #ffffff;
@@ -75,7 +127,6 @@
             display: block;
         }
 
-        /* Forms & Tables */
         .form-group {
             margin-bottom: 15px;
         }
@@ -84,7 +135,7 @@
             margin-bottom: 5px;
             font-weight: 600;
         }
-        .form-group input, .form-group select, .form-group textarea {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 10px;
             border: 1px solid #e0e5f2;
@@ -104,10 +155,23 @@
             background-color: #3311db;
         }
 
+        .controls-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .controls-row select, .controls-row input {
+            padding: 10px;
+            border: 1px solid #e0e5f2;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 10px;
         }
         table th, table td {
             padding: 12px;
@@ -116,188 +180,490 @@
         }
         table th {
             background-color: #f7fafc;
-            color: #a318ff;
             color: #2b3674;
         }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar Navigation -->
     <div class="sidebar">
         <h2>Teacher Portal</h2>
-        <button class="nav-btn active" onclick="switchTab('attendance')">Mark Attendance</button>
-        <button class="nav-btn" onclick="switchTab('marks')">Upload Marks</button>
-        <button class="nav-btn" onclick="switchTab('timetable')">Manage Timetable</button>
-        <button class="nav-btn" onclick="switchTab('announcements')">Announcements</button>
+        
+        <div class="teacher-select-box">
+            <label for="teacher-select">Select Active Teacher:</label>
+            <select id="teacher-select" onchange="loadTeacherProfile()"></select>
+        </div>
+
+        <button class="nav-btn active" onclick="switchTab('timetable', this)">View Timetable</button>
+        <button class="nav-btn" onclick="switchTab('attendance', this)">Mark Attendance</button>
+        <button class="nav-btn" onclick="switchTab('marks', this)">Enter Marks</button>
+        <button class="nav-btn" onclick="switchTab('ranking', this)">Student Ranking</button>
+        <button class="nav-btn" onclick="switchTab('ai-assistant', this)">AI Command Assistant</button>
     </div>
 
-    <!-- Main Content -->
     <div class="main-content">
         <div class="header">
-            <h1 id="page-title">Mark Attendance</h1>
-            <span>Welcome, <strong>Teacher</strong></span>
+            <h1 id="page-title">Teacher Profile & Timetable</h1>
+            <span>Portal Status: <strong>Active</strong></span>
         </div>
 
-        <!-- 1. Mark Attendance Section -->
-        <div id="attendance" class="tab-content active">
-            <h3>Daily Attendance Record</h3>
-            <form id="attendance-form" style="margin-top: 15px;">
-                <div class="form-group">
-                    <label>Select Date</label>
-                    <input type="date" required>
-                </div>
-                <div class="form-group">
-                    <label>Select Class / Division</label>
-                    <select required>
-                        <option value="">-- Choose Class --</option>
-                        <option value="TY-AIDS">TY - AIDS</option>
-                        <option value="SY-AIDS">SY - AIDS</option>
-                    </select>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Roll No</th>
-                            <th>Student Name</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>60</td>
-                            <td>Ritu Shidhreddy</td>
-                            <td>
-                                <select><option>Present</option><option>Absent</option></select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>67</td>
-                            <td>Monika Kale</td>
-                            <td>
-                                <select><option>Present</option><option>Absent</option></select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>69</td>
-                            <td>Nimita Dehade</td>
-                            <td>
-                                <select><option>Present</option><option>Absent</option></select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>72</td>
-                            <td>Sakshi Gaikwad</td>
-                            <td>
-                                <select><option>Present</option><option>Absent</option></select>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <br>
-                <button type="button" class="submit-btn">Save Attendance</button>
-            </form>
+        <!-- Teacher Profile Card -->
+        <div class="profile-card">
+            <div class="profile-item">
+                <label>Teacher Name</label>
+                <p id="prof-name">Dilip Patil</p>
+            </div>
+            <div class="profile-item">
+                <label>Education</label>
+                <p id="prof-edu">M.Sc., B.Ed.</p>
+            </div>
+            <div class="profile-item">
+                <label>Specialization</label>
+                <p id="prof-spec">Mathematics</p>
+            </div>
+            <div class="profile-item">
+                <label>Assigned Role</label>
+                <p id="prof-role"><span class="badge">Class Teacher</span></p>
+            </div>
+            <div class="profile-item">
+                <label>Class / Designation</label>
+                <p id="prof-class">5th A</p>
+            </div>
         </div>
 
-        <!-- 2. Upload Marks Section -->
-        <div id="marks" class="tab-content">
-            <h3>Upload Student Marks</h3>
-            <form id="marks-form" style="margin-top: 15px;">
-                <div class="form-group">
-                    <label>Subject</label>
-                    <input type="text" placeholder="e.g. Research Methodology, AI" required>
-                </div>
-                <div class="form-group">
-                    <label>Exam Type</label>
-                    <select required>
-                        <option value="CIE 1">CIE 1</option>
-                        <option value="CIE 2">CIE 2</option>
-                        <option value="Semester End">Semester End</option>
-                    </select>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Roll No</th>
-                            <th>Student Name</th>
-                            <th>Marks Obtained (Out of 100)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>60</td>
-                            <td>Ritu Shidhreddy</td>
-                            <td><input type="number" max="100" min="0"></td>
-                        </tr>
-                        <tr>
-                            <td>67</td>
-                            <td>Monika Kale</td>
-                            <td><input type="number" max="100" min="0"></td>
-                        </tr>
-                        <tr>
-                            <td>69</td>
-                            <td>Nimita Dehade</td>
-                            <td><input type="number" max="100" min="0"></td>
-                        </tr>
-                        <tr>
-                            <td>72</td>
-                            <td>Sakshi Gaikwad</td>
-                            <td><input type="number" max="100" min="0"></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <br>
-                <button type="button" class="submit-btn">Submit Marks</button>
-            </form>
+        <!-- 1. Timetable View Section -->
+        <div id="timetable" class="tab-content active">
+            <h3>Weekly Teaching Schedule</h3>
+            <p style="color: #7090b0; margin-bottom: 15px;">Official schedule loaded from system records.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                    </tr>
+                </thead>
+                <tbody id="timetable-body">
+                    <!-- Dynamic Timetable Data -->
+                </tbody>
+            </table>
         </div>
 
-        <!-- 3. Timetable Section -->
-        <div id="timetable" class="tab-content">
-            <h3>Class Schedule Management</h3>
-            <p style="margin-top: 10px; color: #7090b0;">Update daily class lectures and timings.</p>
-        </div>
-
-        <!-- 4. Announcements Section -->
-        <div id="announcements" class="tab-content">
-            <h3>Broadcast Notice</h3>
+        <!-- 2. Mark Attendance Section -->
+        <div id="attendance" class="tab-content">
+            <h3>Mark Attendance</h3>
             <form style="margin-top: 15px;">
-                <div class="form-group">
-                    <label>Notice Title</label>
-                    <input type="text" placeholder="e.g. CIE 1 Exam Schedule" required>
+                <div class="controls-row">
+                    <div style="flex: 1;">
+                        <label style="font-weight: 600;">Date:</label>
+                        <input type="date" value="2026-08-21" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-weight: 600;">Class:</label>
+                        <select>
+                            <option>5th A</option>
+                            <option>6th B</option>
+                            <option>7th A</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Notice Content</label>
-                    <textarea rows="4" placeholder="Enter notice details here..."></textarea>
-                </div>
-                <button type="button" class="submit-btn">Publish Notice</button>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Roll No</th>
+                            <th>Student Name</th>
+                            <th>Attendance Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-table-body">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+                <br>
+                <button type="button" class="submit-btn" onclick="alert('Attendance saved successfully!')">Save Attendance</button>
             </form>
+        </div>
+
+        <!-- 3. Enter Marks Section -->
+        <div id="marks" class="tab-content">
+            <h3>Enter Academic Marks</h3>
+            <p style="color: #7090b0; margin-bottom: 15px;">Record Unit Test, Assignment, and Oral performance scores.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Roll No</th>
+                        <th>Student Name</th>
+                        <th>Unit Test (20)</th>
+                        <th>Assignment Marks (20)</th>
+                        <th>Oral Marks (10)</th>
+                    </tr>
+                </thead>
+                <tbody id="marks-table-body">
+                    <!-- Loaded dynamically -->
+                </tbody>
+            </table>
+            <br>
+            <button type="button" class="submit-btn" onclick="alert('Marks recorded successfully!')">Save Marks</button>
+        </div>
+
+        <!-- 4. Student Performance & Sorting Section -->
+        <div id="ranking" class="tab-content">
+            <h3>Student Performance Ranking</h3>
+            <p style="color: #7090b0; margin-bottom: 20px;">Sort and search student records across subjects.</p>
+
+            <div class="controls-row">
+                <div>
+                    <label style="font-weight: 600; margin-right: 8px;">Sort Order:</label>
+                    <select id="sort-order" onchange="sortStudentData()">
+                        <option value="default">Default (Roll No)</option>
+                        <option value="high-low">Marks: High to Low</option>
+                        <option value="low-high">Marks: Low to High</option>
+                    </select>
+                </div>
+                <div>
+                    <input type="text" id="search-student" placeholder="Search by name or roll..." onkeyup="filterStudentData()">
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Roll No</th>
+                        <th>Student Name</th>
+                        <th>Unit Test</th>
+                        <th>Assignment</th>
+                        <th>Oral</th>
+                        <th>Total Marks</th>
+                        <th>Attendance</th>
+                    </tr>
+                </thead>
+                <tbody id="ranking-table-body">
+                    <!-- Loaded dynamically -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 5. AI Assistant Section -->
+        <div id="ai-assistant" class="tab-content">
+            <h3>Teacher AI Command Assistant</h3>
+            <p style="color: #7090b0; margin-bottom: 15px;">Issue voice or text commands to automatically update marks, attendance, or perform queries.</p>
+            
+            <div id="chat-window" style="height: 280px; border: 1px solid #e0e5f2; border-radius: 10px; padding: 15px; overflow-y: auto; background: #f7fafc; margin-bottom: 15px;">
+                <div style="background: #e9ecef; padding: 10px; border-radius: 8px; max-width: 80%; margin-bottom: 10px;">
+                    <strong>Assistant:</strong> Hello Teacher! You can issue natural language commands like:
+                    <br>• <em>"Mark Rahul 18 out of 20 in unit test 1"</em>
+                    <br>• <em>"Mark Rahul present"</em>
+                    <br>• <em>"Set Rahul assignment marks to 19"</em>
+                    <br>• <em>"Sort high to low"</em>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="teacher-chat-input" placeholder="Type command or speak..." style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #e0e5f2;">
+                <button type="button" class="submit-btn" onclick="sendTeacherCommand()">Send</button>
+                <button type="button" class="submit-btn" style="background-color: #28a745;" onclick="startVoiceRecognition()">Voice Input</button>
+            </div>
         </div>
 
     </div>
 
     <script>
-        function switchTab(tabId) {
-            // Hide all tabs
-            const tabs = document.querySelectorAll('.tab-content');
-            tabs.forEach(tab => tab.classList.remove('active'));
+        // Teachers Dataset
+        const teachersData = [
+            { id: "dilip1", name: "Dilip Patil", edu: "M.Sc., B.Ed.", spec: "Mathematics", role: "Class Teacher", class: "5th A" },
+            { id: "shobha2", name: "Shobha Joshi", edu: "M.Sc., B.Ed.", spec: "Science", role: "Class Teacher", class: "5th B" },
+            { id: "vijay3", name: "Vijay Shinde", edu: "M.A., B.Ed.", spec: "English", role: "Class Teacher", class: "5th C" },
+            { id: "kavita4", name: "Kavita Mane", edu: "M.A., B.Ed.", spec: "Hindi", role: "Class Teacher", class: "6th A" },
+            { id: "deepak5", name: "Deepak Wagh", edu: "M.A., B.Ed.", spec: "Marathi", role: "Class Teacher", class: "6th B" },
+            { id: "vijaya6", name: "Vijaya More", edu: "M.A., B.Ed.", spec: "Social Science", role: "Class Teacher", class: "6th C" },
+            { id: "prakash7", name: "Prakash Kulkarni", edu: "M.A., B.Ed.", spec: "Sanskrit", role: "Class Teacher", class: "7th A" },
+            { id: "ravindra8", name: "Ravindra Patil", edu: "M.Sc., B.Ed.", spec: "Mathematics", role: "Class Teacher", class: "7th B" },
+            { id: "ujwala9", name: "Ujwala Shinde", edu: "M.Sc., B.Ed.", spec: "Science", role: "Class Teacher", class: "7th C" },
+            { id: "mahesh10", name: "Mahesh Chavan", edu: "M.A., B.Ed.", spec: "English", role: "Class Teacher", class: "8th A" },
+            { id: "sanjay11", name: "Sanjay Pawar", edu: "M.A., B.Ed.", spec: "Hindi", role: "Class Teacher", class: "8th B" },
+            { id: "vasant12", name: "Vasant Kale", edu: "M.A., B.Ed.", spec: "Marathi", role: "Class Teacher", class: "8th C" },
+            { id: "vijay13", name: "Vijay Kadam", edu: "M.A., B.Ed.", spec: "Social Science", role: "Class Teacher", class: "9th A" },
+            { id: "nirmala14", name: "Nirmala Nikam", edu: "M.A., B.Ed.", spec: "Sanskrit", role: "Class Teacher", class: "9th B" },
+            { id: "varsha15", name: "Varsha Kadam", edu: "M.Sc., B.Ed.", spec: "Mathematics", role: "Class Teacher", class: "9th C" },
+            { id: "shobha16", name: "Shobha Thakur", edu: "M.Sc., B.Ed.", spec: "Science", role: "Class Teacher", class: "10th A" },
+            { id: "shobha17", name: "Shobha Sawant", edu: "M.A., B.Ed.", spec: "English", role: "Class Teacher", class: "10th B" },
+            { id: "archana18", name: "Archana Wagh", edu: "M.A., B.Ed.", spec: "Hindi", role: "Class Teacher", class: "10th C" },
+            { id: "kavita19", name: "Kavita Thakur", edu: "M.A., B.Ed.", spec: "Marathi", role: "Subject Teacher", class: "Subject Teacher" },
+            { id: "bharat20", name: "Bharat Shinde", edu: "M.A., B.Ed.", spec: "Social Science", role: "Subject Teacher", class: "Subject Teacher" },
+            { id: "pallavi21", name: "Pallavi Rane", edu: "M.A., B.Ed.", spec: "Sanskrit", role: "Subject Teacher", class: "Subject Teacher" },
+            { id: "shobha22", name: "Shobha Shinde", edu: "M.Sc., B.Ed.", spec: "Mathematics", role: "Subject Teacher", class: "Subject Teacher" },
+            { id: "mahesh23", name: "Mahesh Thakur", edu: "M.Sc., B.Ed.", spec: "Science", role: "Subject Teacher", class: "Subject Teacher" },
+            { id: "nirmala24", name: "Nirmala More", edu: "M.A., B.Ed.", spec: "English", role: "Subject Teacher", class: "Subject Teacher" },
+            { id: "archana25", name: "Archana Patil", edu: "M.A., B.Ed.", spec: "Hindi", role: "Subject Teacher", class: "Subject Teacher" }
+        ];
 
-            // Remove active class from buttons
-            const buttons = document.querySelectorAll('.nav-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
+        // Sample Timetable Rows
+        const defaultTimetable = [
+            { time: "9:00 - 9:40", mon: "5th A", tue: "9th B", wed: "Free", thu: "6th B", fri: "Free", sat: "10th B" },
+            { time: "9:40 - 10:20", mon: "9th B", tue: "6th C", wed: "Free", thu: "6th A", fri: "5th C", sat: "5th B" },
+            { time: "10:20 - 11:00", mon: "Free", tue: "6th B", wed: "Free", thu: "8th A", fri: "Free", sat: "5th A" },
+            { time: "11:00 - 11:40", mon: "Free", tue: "10th C", wed: "10th B", thu: "Free", fri: "5th A", sat: "7th A" },
+            { time: "12:00 - 12:40", mon: "8th B", tue: "8th A", wed: "7th C", thu: "5th A", fri: "7th A", sat: "Free" },
+            { time: "12:40 - 13:20", mon: "10th B", tue: "10th A", wed: "5th A", thu: "7th A", fri: "Free", sat: "8th C" },
+            { time: "13:20 - 14:00", mon: "Free", tue: "5th A", wed: "Free", thu: "Free", fri: "6th B", sat: "Free" }
+        ];
 
-            // Show current tab & activate button
+        // Student Data State
+        let students = [
+            { roll: 101, name: "Rahul Sharma", unitTest: 16, assignment: 18, oral: 8, attendance: "Present" },
+            { roll: 102, name: "Priya Patel", unitTest: 19, assignment: 20, oral: 9, attendance: "Present" },
+            { roll: 103, name: "Amit Verma", unitTest: 12, assignment: 14, oral: 6, attendance: "Absent" },
+            { roll: 104, name: "Neha Singh", unitTest: 18, assignment: 17, oral: 9, attendance: "Present" }
+        ];
+
+        function initTeacherSelect() {
+            const select = document.getElementById('teacher-select');
+            teachersData.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = `${t.name} (${t.spec})`;
+                select.appendChild(opt);
+            });
+            loadTeacherProfile();
+        }
+
+        function loadTeacherProfile() {
+            const selectedId = document.getElementById('teacher-select').value;
+            const teacher = teachersData.find(t => t.id === selectedId) || teachersData[0];
+
+            document.getElementById('prof-name').innerText = teacher.name;
+            document.getElementById('prof-edu').innerText = teacher.edu;
+            document.getElementById('prof-spec').innerText = teacher.spec;
+            document.getElementById('prof-role').innerHTML = `<span class="badge">${teacher.role}</span>`;
+            document.getElementById('prof-class').innerText = teacher.class;
+
+            renderTimetable();
+            renderAllTables();
+        }
+
+        function renderTimetable() {
+            const tbody = document.getElementById('timetable-body');
+            tbody.innerHTML = '';
+            defaultTimetable.forEach(row => {
+                tbody.innerHTML += `<tr>
+                    <td><strong>${row.time}</strong></td>
+                    <td>${row.mon}</td>
+                    <td>${row.tue}</td>
+                    <td>${row.wed}</td>
+                    <td>${row.thu}</td>
+                    <td>${row.fri}</td>
+                    <td>${row.sat}</td>
+                </tr>`;
+            });
+        }
+
+        function renderAllTables() {
+            renderAttendance();
+            renderMarks();
+            renderRanking(students);
+        }
+
+        function renderAttendance() {
+            const tbody = document.getElementById('attendance-table-body');
+            tbody.innerHTML = '';
+            students.forEach(s => {
+                tbody.innerHTML += `<tr>
+                    <td>${s.roll}</td>
+                    <td>${s.name}</td>
+                    <td>
+                        <select onchange="updateAttendanceDirect(${s.roll}, this.value)">
+                            <option value="Present" ${s.attendance === 'Present' ? 'selected' : ''}>Present</option>
+                            <option value="Absent" ${s.attendance === 'Absent' ? 'selected' : ''}>Absent</option>
+                        </select>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        function renderMarks() {
+            const tbody = document.getElementById('marks-table-body');
+            tbody.innerHTML = '';
+            students.forEach(s => {
+                tbody.innerHTML += `<tr>
+                    <td>${s.roll}</td>
+                    <td>${s.name}</td>
+                    <td><input type="number" value="${s.unitTest}" max="20" onchange="updateMarkDirect(${s.roll}, 'unitTest', this.value)"></td>
+                    <td><input type="number" value="${s.assignment}" max="20" onchange="updateMarkDirect(${s.roll}, 'assignment', this.value)"></td>
+                    <td><input type="number" value="${s.oral}" max="10" onchange="updateMarkDirect(${s.roll}, 'oral', this.value)"></td>
+                </tr>`;
+            });
+        }
+
+        function renderRanking(data) {
+            const tbody = document.getElementById('ranking-table-body');
+            tbody.innerHTML = '';
+            data.forEach((s, index) => {
+                const total = Number(s.unitTest) + Number(s.assignment) + Number(s.oral);
+                tbody.innerHTML += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${s.roll}</td>
+                    <td>${s.name}</td>
+                    <td>${s.unitTest}</td>
+                    <td>${s.assignment}</td>
+                    <td>${s.oral}</td>
+                    <td><strong>${total} / 50</strong></td>
+                    <td>${s.attendance}</td>
+                </tr>`;
+            });
+        }
+
+        function updateAttendanceDirect(roll, status) {
+            let s = students.find(st => st.roll === roll);
+            if(s) s.attendance = status;
+            renderAllTables();
+        }
+
+        function updateMarkDirect(roll, field, val) {
+            let s = students.find(st => st.roll === roll);
+            if(s) s[field] = Number(val);
+            renderAllTables();
+        }
+
+        function sortStudentData() {
+            const order = document.getElementById('sort-order').value;
+            let sortedData = [...students];
+
+            if (order === 'high-low') {
+                sortedData.sort((a, b) => (b.unitTest + b.assignment + b.oral) - (a.unitTest + a.assignment + a.oral));
+            } else if (order === 'low-high') {
+                sortedData.sort((a, b) => (a.unitTest + a.assignment + a.oral) - (b.unitTest + b.assignment + b.oral));
+            } else {
+                sortedData.sort((a, b) => a.roll - b.roll);
+            }
+            renderRanking(sortedData);
+        }
+
+        function filterStudentData() {
+            const query = document.getElementById('search-student').value.toLowerCase();
+            const filtered = students.filter(s => 
+                s.name.toLowerCase().includes(query) || s.roll.toString().includes(query)
+            );
+            renderRanking(filtered);
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
             document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            btn.classList.add('active');
 
-            // Update header title
             const titles = {
+                'timetable': 'Teacher Profile & Timetable',
                 'attendance': 'Mark Attendance',
-                'marks': 'Upload Marks',
-                'timetable': 'Manage Timetable',
-                'announcements': 'Broadcast Notice'
+                'marks': 'Enter Student Marks',
+                'ranking': 'Student Performance Ranking',
+                'ai-assistant': 'AI Command Assistant'
             };
             document.getElementById('page-title').innerText = titles[tabId];
         }
+
+        // AI Chatbot Logic & Natural Language Parser
+        function sendTeacherCommand() {
+            const input = document.getElementById('teacher-chat-input');
+            const cmd = input.value.trim();
+            if (!cmd) return;
+
+            appendMessage('Teacher', cmd, '#4318ff', '#ffffff');
+            input.value = '';
+            processTeacherIntent(cmd);
+        }
+
+        function processTeacherIntent(text) {
+            const lower = text.toLowerCase();
+            let response = "";
+
+            // Find matching student by name
+            let targetStudent = students.find(s => lower.includes(s.name.toLowerCase().split(' ')[0]));
+
+            if (lower.includes("present") || lower.includes("absent")) {
+                let status = lower.includes("present") ? "Present" : "Absent";
+                if (targetStudent) {
+                    targetStudent.attendance = status;
+                    response = `Updated attendance for ${targetStudent.name} to ${status}.`;
+                } else {
+                    response = `Attendance command recognized. Specify a valid student name like 'Rahul'.`;
+                }
+            } 
+            else if (lower.includes("unit test") || lower.includes("marks")) {
+                let match = lower.match(/\d+/);
+                if (targetStudent && match) {
+                    targetStudent.unitTest = Number(match[0]);
+                    response = `Updated ${targetStudent.name}'s Unit Test marks to ${match[0]}.`;
+                } else {
+                    response = `Mark command recognized. Example: 'Mark Rahul 18 in unit test'.`;
+                }
+            }
+            else if (lower.includes("assignment")) {
+                let match = lower.match(/\d+/);
+                if (targetStudent && match) {
+                    targetStudent.assignment = Number(match[0]);
+                    response = `Updated ${targetStudent.name}'s Assignment marks to ${match[0]}.`;
+                } else {
+                    response = `Assignment command recognized. Example: 'Set Rahul assignment marks to 19'.`;
+                }
+            }
+            else if (lower.includes("sort high") || lower.includes("high to low")) {
+                document.getElementById('sort-order').value = 'high-low';
+                sortStudentData();
+                response = `Sorted student records High to Low.`;
+            }
+            else {
+                response = `Executed command: "${text}". Updated system records.`;
+            }
+
+            renderAllTables();
+
+            setTimeout(() => {
+                appendMessage('Assistant', response, '#e9ecef', '#2b3674');
+            }, 400);
+        }
+
+        function appendMessage(sender, message, bgColor, textColor) {
+            const chatWindow = document.getElementById('chat-window');
+            const msgDiv = document.createElement('div');
+            msgDiv.style.cssText = `background: ${bgColor}; color: ${textColor}; padding: 10px; border-radius: 8px; max-width: 80%; margin-bottom: 10px;`;
+            msgDiv.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            chatWindow.appendChild(msgDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function startVoiceRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert("Speech recognition is not supported in this browser.");
+                return;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = function() {
+                document.getElementById('teacher-chat-input').placeholder = "Listening...";
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('teacher-chat-input').value = transcript;
+                sendTeacherCommand();
+            };
+
+            recognition.start();
+        }
+
+        // Initialize Page
+        window.onload = function() {
+            initTeacherSelect();
+        };
     </script>
 </body>
 </html>
