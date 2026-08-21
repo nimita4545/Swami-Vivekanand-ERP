@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Portal - Swami Vivekanand School ERP</title>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <!-- PDF Generation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
         body { background-color: #f4f7fe; color: #333; padding: 20px; }
@@ -27,7 +29,8 @@
         /* Tab Content Panel */
         .tab-panel { display: none; background: white; border-radius: 6px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
         .tab-panel.active { display: block; }
-        .panel-title { font-size: 18px; font-weight: bold; color: #0047ab; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
+        .panel-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
+        .panel-title { font-size: 18px; font-weight: bold; color: #0047ab; }
 
         /* Attendance Bar */
         .attendance-bar-bg { background: #e2e8f0; border-radius: 10px; height: 22px; width: 100%; overflow: hidden; margin-top: 10px; }
@@ -44,12 +47,13 @@
         .report-card-item label { font-size: 12px; color: #475569; display: block; }
         .report-card-item span { font-size: 22px; font-weight: bold; color: #0047ab; }
 
-        /* Payment */
+        /* Buttons */
+        .download-btn { background-color: #0047ab; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; }
         .pay-btn { background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; }
 
         /* Chatbot */
-        .chat-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; height: 250px; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .msg { padding: 8px 12px; border-radius: 6px; font-size: 13px; max-width: 75%; word-wrap: break-word; }
+        .chat-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; height: 280px; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .msg { padding: 8px 12px; border-radius: 6px; font-size: 13px; max-width: 80%; word-wrap: break-word; }
         .msg-bot { background: #e2e8f0; align-self: flex-start; color: #0f172a; }
         .msg-user { background: #0047ab; color: white; align-self: flex-end; }
         .chat-input-area { display: flex; gap: 10px; margin-top: 10px; }
@@ -65,7 +69,7 @@
         <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 
-    <!-- Student Profile Information Header -->
+    <!-- Student Profile Header -->
     <div class="profile-card-container">
         <div class="profile-grid">
             <div class="profile-item"><label>Student Name</label><span id="p-name">Loading...</span></div>
@@ -88,7 +92,7 @@
 
     <!-- 1. Attendance Panel -->
     <div id="attendance" class="tab-panel active">
-        <div class="panel-title">Attendance Status</div>
+        <div class="panel-header-row"><div class="panel-title">Attendance Status</div></div>
         <p>Total Attendance Score: <strong>88% (140 / 159 Days Attended)</strong></p>
         <div class="attendance-bar-bg">
             <div class="attendance-bar-fill">88%</div>
@@ -97,7 +101,7 @@
 
     <!-- 2. View Marks Panel -->
     <div id="marks" class="tab-panel">
-        <div class="panel-title">Detailed Evaluation Marks</div>
+        <div class="panel-header-row"><div class="panel-title">Detailed Evaluation Marks</div></div>
         <table>
             <thead>
                 <tr>
@@ -121,48 +125,56 @@
 
     <!-- 3. Report Card Panel -->
     <div id="reportcard" class="tab-panel">
-        <div class="panel-title">Annual Performance Report Card</div>
-        <div class="report-summary-grid">
-            <div class="report-card-item">
-                <label>Total Marks Obtained</label>
-                <span>352 / 400</span>
-            </div>
-            <div class="report-card-item">
-                <label>Overall Percentage</label>
-                <span>88.00%</span>
-            </div>
-            <div class="report-card-item">
-                <label>Overall Grade</label>
-                <span>A+</span>
-            </div>
-            <div class="report-card-item">
-                <label>Final Result</label>
-                <span style="color: #28a745;">PASSED</span>
-            </div>
+        <div class="panel-header-row">
+            <div class="panel-title">Annual Performance Report Card</div>
+            <button class="download-btn" onclick="downloadReportCard()">Download PDF Report</button>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Subject</th>
-                    <th>Total Obtained Marks</th>
-                    <th>Maximum Marks</th>
-                    <th>Percentage</th>
-                    <th>Grade</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td>Mathematics</td><td>89</td><td>100</td><td>89%</td><td>A+</td></tr>
-                <tr><td>Science</td><td>85</td><td>100</td><td>85%</td><td>A</td></tr>
-                <tr><td>English</td><td>85</td><td>100</td><td>85%</td><td>A</td></tr>
-                <tr><td>Social Science</td><td>93</td><td>100</td><td>93%</td><td>O</td></tr>
-            </tbody>
-        </table>
+        <div id="report-card-printable" style="padding: 10px; background: white;">
+            <h3 style="text-align: center; color: #0047ab; margin-bottom: 15px;">Swami Vivekanand School - Official Report Card</h3>
+            
+            <div class="report-summary-grid">
+                <div class="report-card-item">
+                    <label>Total Marks Obtained</label>
+                    <span>352 / 400</span>
+                </div>
+                <div class="report-card-item">
+                    <label>Overall Percentage</label>
+                    <span>88.00%</span>
+                </div>
+                <div class="report-card-item">
+                    <label>Overall Grade</label>
+                    <span>A+</span>
+                </div>
+                <div class="report-card-item">
+                    <label>Final Result</label>
+                    <span style="color: #28a745;">PASSED</span>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Total Obtained Marks</th>
+                        <th>Maximum Marks</th>
+                        <th>Percentage</th>
+                        <th>Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Mathematics</td><td>89</td><td>100</td><td>89%</td><td>A+</td></tr>
+                    <tr><td>Science</td><td>85</td><td>100</td><td>85%</td><td>A</td></tr>
+                    <tr><td>English</td><td>85</td><td>100</td><td>85%</td><td>A</td></tr>
+                    <tr><td>Social Science</td><td>93</td><td>100</td><td>93%</td><td>O</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- 4. Holiday Notice Panel -->
     <div id="holiday" class="tab-panel">
-        <div class="panel-title">Holiday Notices & Vacations</div>
+        <div class="panel-header-row"><div class="panel-title">Holiday Notices & Vacations</div></div>
         <ul style="margin-left: 20px; line-height: 1.8;">
             <li><strong>Ganesh Chaturthi:</strong> September 7, 2026</li>
             <li><strong>Mahatma Gandhi Jayanti:</strong> October 2, 2026</li>
@@ -172,14 +184,14 @@
 
     <!-- 5. Fees Section Panel -->
     <div id="fees" class="tab-panel">
-        <div class="panel-title">Online Fees Payment</div>
+        <div class="panel-header-row"><div class="panel-title">Online Fees Payment</div></div>
         <p>Pending Term Fee Balance: <strong>INR 4,500</strong></p>
         <button class="pay-btn" onclick="initiatePayment()">Pay Term Fees Online</button>
     </div>
 
     <!-- 6. Timetable Panel -->
     <div id="timetable" class="tab-panel">
-        <div class="panel-title">Class Timetable Schedule</div>
+        <div class="panel-header-row"><div class="panel-title">Class Timetable Schedule</div></div>
         <table>
             <thead>
                 <tr>
@@ -204,20 +216,20 @@
         </table>
     </div>
 
-    <!-- 7. Student Chatbot Panel -->
+    <!-- 7. Multilingual & Subject Assistant Chatbot Panel -->
     <div id="chatbot" class="tab-panel">
-        <div class="panel-title">Student Assistant Chatbot</div>
+        <div class="panel-header-row"><div class="panel-title">Multilingual AI Study Assistant</div></div>
         <div class="chat-box" id="chat-box">
-            <div class="msg msg-bot">Hello! Ask me about your attendance, report card percentage, timetable, or upcoming holiday notices.</div>
+            <div class="msg msg-bot">Hi! I am your AI assistant. You can greet me, ask about attendance, marks, holidays, or ask any question related to Math, Science, English, or Social Science!</div>
         </div>
         <div class="chat-input-area">
-            <input type="text" id="chat-input" class="chat-input" placeholder="Type query here..." onkeypress="handleKeyPress(event)">
-            <button class="chat-send" onclick="sendChatMessage()">Send Query</button>
+            <input type="text" id="chat-input" class="chat-input" placeholder="Ask anything (e.g. Hi, Photosynthesis, My marks, Pythogoras theorem)..." onkeypress="handleKeyPress(event)">
+            <button class="chat-send" onclick="sendChatMessage()">Send</button>
         </div>
     </div>
 
     <script>
-        // Check active login user
+        // Active Session Check
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
         if (!currentUser || currentUser.role !== 'student') {
             window.location.href = 'index.html';
@@ -232,7 +244,7 @@
             window.location.href = 'index.html';
         }
 
-        // Tab Switch Logic
+        // Navigation Tabs
         function openTab(tabName) {
             const panels = document.querySelectorAll('.tab-panel');
             const buttons = document.querySelectorAll('.tab-btn');
@@ -244,7 +256,23 @@
             event.currentTarget.classList.add('active');
         }
 
-        // Payment Integration
+        // PDF Generation
+        function downloadReportCard() {
+            const element = document.getElementById('report-card-printable');
+            const studentName = currentUser ? currentUser.name : "Student";
+            
+            const opt = {
+                margin:       0.5,
+                filename:     `${studentName}_Report_Card.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Razorpay Payment Integration
         function initiatePayment() {
             var options = {
                 "key": "rzp_test_dummykey", 
@@ -264,31 +292,59 @@
             rzp.open();
         }
 
-        // Chatbot logic
+        // Multilingual & Subject Assistant Chatbot Logic
         function handleKeyPress(e) {
             if (e.key === 'Enter') sendChatMessage();
         }
 
         function sendChatMessage() {
             const input = document.getElementById('chat-input');
-            const text = input.value.trim().toLowerCase();
+            const rawText = input.value.trim();
+            const text = rawText.toLowerCase();
             if (!text) return;
 
-            addMessage(input.value, 'msg-user');
+            addMessage(rawText, 'msg-user');
             input.value = '';
 
-            let reply = "I am sorry, I didn't catch that. Try asking about your attendance, marks, percentage, timetable, or holidays.";
+            let reply = "I am here to assist! You can ask me about school records or any subject concept (Math, Science, English, etc.).";
 
-            if (text.includes('attendance')) {
-                reply = "Your attendance is 88% (140 out of 159 days attended).";
+            // Greetings (English, Hindi, Marathi)
+            if (["hi", "hello", "hey", "namaste", "namaskar", "salut"].some(g => text === g || text.startsWith(g + ' '))) {
+                reply = "Hi! How can I help you today? Ask me about your attendance, report card, timetable, or any study question!";
+            }
+            // Multilingual School Records Queries
+            else if (text.includes('attendance') || text.includes('hazari') || text.includes('present')) {
+                reply = "Your total attendance is 88% (140 out of 159 days attended). / आपकी उपस्थिति 88% है।";
             } else if (text.includes('percentage') || text.includes('report') || text.includes('grade')) {
-                reply = "Your total score is 352/400 with an overall percentage of 88.00% (Grade A+).";
-            } else if (text.includes('mark') || text.includes('score') || text.includes('result')) {
-                reply = "Your subject marks are: Mathematics: 89/100, Science: 85/100, English: 85/100, Social Science: 93/100.";
-            } else if (text.includes('holiday') || text.includes('vacation') || text.includes('notice')) {
+                reply = "Your overall report card score is 352/400 with a percentage of 88.00% (Grade A+).";
+            } else if (text.includes('mark') || text.includes('score') || text.includes('result') || text.includes('gun')) {
+                reply = "Your subject scores: Mathematics: 89, Science: 85, English: 85, Social Science: 93.";
+            } else if (text.includes('holiday') || text.includes('vacation') || text.includes('notice') || text.includes('sutti') || text.includes('chutti')) {
                 reply = "Upcoming holidays: Ganesh Chaturthi (Sept 7), Gandhi Jayanti (Oct 2), and Diwali Vacation (Nov 8 to Nov 18).";
-            } else if (text.includes('time') || text.includes('schedule') || text.includes('timetable')) {
-                reply = "Classes start at 9:00 AM daily. Short break is from 11:40 AM to 12:00 PM.";
+            } else if (text.includes('timetable') || text.includes('schedule') || text.includes('time')) {
+                reply = "School hours are 9:00 AM to 1:20 PM with a short break from 11:40 AM to 12:00 PM.";
+            }
+            // Subject Q&A: Science
+            else if (text.includes('photosynthesis')) {
+                reply = "Photosynthesis is the process by which plants use sunlight, water, and carbon dioxide to create oxygen and energy in the form of sugar (glucose).";
+            } else if (text.includes('gravity')) {
+                reply = "Gravity is the fundamental force of attraction that pulls objects toward each other, such as Earth pulling objects toward its center.";
+            } else if (text.includes('water formula') || text.includes('formula of water')) {
+                reply = "The chemical formula for water is H2O (two Hydrogen atoms and one Oxygen atom).";
+            }
+            // Subject Q&A: Mathematics
+            else if (text.includes('pythagoras') || text.includes('pythagorean')) {
+                reply = "Pythagoras Theorem states that in a right-angled triangle, a² + b² = c², where c is the hypotenuse.";
+            } else if (text.includes('area of circle') || text.includes('circle area')) {
+                reply = "The area of a circle is calculated using the formula A = π × r² (where r is the radius).";
+            } else if (text.includes('prime number')) {
+                reply = "A prime number is a number greater than 1 that has only two factors: 1 and itself (e.g., 2, 3, 5, 7, 11).";
+            }
+            // Subject Q&A: English
+            else if (text.includes('noun')) {
+                reply = "A noun is a word that represents a person, place, thing, or idea (e.g., Swami Vivekanand School, book, Maharashtra).";
+            } else if (text.includes('verb')) {
+                reply = "A verb is an action word that describes what someone or something is doing (e.g., study, read, write, run).";
             }
 
             setTimeout(() => {
