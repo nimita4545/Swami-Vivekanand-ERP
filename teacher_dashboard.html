@@ -87,7 +87,7 @@
                     <tr><th>Roll No</th><th>Student Name</th><th>Father Name</th><th>Mother Name</th><th>School ID</th></tr>
                 </thead>
                 <tbody id="studentListTable">
-                    <!-- Populated via JavaScript -->
+                    <!-- Populated dynamically via backend API -->
                 </tbody>
             </table>
         </div>
@@ -105,7 +105,7 @@
                     <tr><th>Roll No</th><th>Student Name</th><th>Present</th><th>Absent</th></tr>
                 </thead>
                 <tbody id="attendanceTable">
-                    <!-- Populated via JavaScript -->
+                    <!-- Populated dynamically via backend API -->
                 </tbody>
             </table>
         </div>
@@ -136,7 +136,7 @@
                     </tr>
                 </thead>
                 <tbody id="marksTable">
-                    <!-- Populated via JavaScript -->
+                    <!-- Populated dynamically via backend API -->
                 </tbody>
             </table>
         </div>
@@ -202,8 +202,10 @@
     </div>
 
     <script>
-        // Sample Student Dataset corresponding to student_data_maharashtra.xlsx
-        const studentDatabase = [
+        const BACKEND_URL = 'https://swami-vivekanand-erp-backend2-11.onrender.com';
+        
+        // Default fallback dataset
+        let studentDatabase = [
             { roll: 1, name: "Nikhil Kokate", father: "Omkar Kokate", mother: "Bhagyashree Kokate", class: "5th A", sch_id: "SCH484", ut1: 18, ut2: 17, assign: 9, oral: 9, total: 53 },
             { roll: 2, name: "Rutuparn Shinde", father: "Tejas Shinde", mother: "Deepa Shinde", class: "5th A", sch_id: "SCH563", ut1: 19, ut2: 18, assign: 10, oral: 10, total: 57 },
             { roll: 3, name: "Sarika Patil", father: "Ajinkya Patil", mother: "Pooja Patil", class: "5th A", sch_id: "SCH284", ut1: 15, ut2: 14, assign: 8, oral: 8, total: 45 },
@@ -213,8 +215,8 @@
             { roll: 7, name: "Sneha Pawar", father: "Sanjay Pawar", mother: "Sunita Pawar", class: "5th A", sch_id: "SCH302", ut1: 5, ut2: 6, assign: 3, oral: 4, total: 18 }
         ];
 
-        // Load Session and Populate Profile and Tables
-        document.addEventListener('DOMContentLoaded', () => {
+        // Load Session, Fetch API Data, and Populate Profile & Tables
+        document.addEventListener('DOMContentLoaded', async () => {
             const rawUser = localStorage.getItem('userData');
             let user = rawUser ? JSON.parse(rawUser) : { name: "Dilip Patil", class_assigned: "5th A", role: "Class Teacher", education: "B.Com. B.Ed" };
 
@@ -224,8 +226,48 @@
             document.getElementById('tchRole').innerText = user.role || "Class Teacher";
             document.getElementById('assignedClassLabel').innerText = user.class_assigned || "5th A";
 
+            // Parse assigned class (e.g. "5th A" -> class: "5th", div: "A")
+            let assignedClass = "5th";
+            let assignedDiv = "A";
+            if (user.class_assigned) {
+                const parts = user.class_assigned.trim().split(' ');
+                if (parts.length >= 2) {
+                    assignedClass = parts[0];
+                    assignedDiv = parts[1];
+                } else if (parts.length === 1) {
+                    assignedClass = parts[0];
+                }
+            }
+
+            await loadStudentsFromApi(assignedClass, assignedDiv);
             renderStudentTables();
         });
+
+        // Async function to fetch students from Python backend API
+        async function loadStudentsFromApi(cls, div) {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/teacher/students?class=${encodeURIComponent(cls)}&div=${encodeURIComponent(div)}`);
+                const data = await response.json();
+
+                if (response.ok && data.success && data.students && data.students.length > 0) {
+                    studentDatabase = data.students.map(s => ({
+                        roll: s['Roll No'] || s.roll || '',
+                        name: s['Student Name'] || s.name || '',
+                        father: s['Father Name'] || s.father || 'N/A',
+                        mother: s['Mother Name'] || s.mother || 'N/A',
+                        class: `${s['Class'] || ''} ${s['Div'] || ''}`.trim() || `${cls} ${div}`,
+                        sch_id: s['School ID'] || s.sch_id || 'N/A',
+                        ut1: s.ut1 !== undefined ? s.ut1 : 15,
+                        ut2: s.ut2 !== undefined ? s.ut2 : 15,
+                        assign: s.assign !== undefined ? s.assign : 8,
+                        oral: s.oral !== undefined ? s.oral : 8,
+                        total: s.total !== undefined ? s.total : 46
+                    }));
+                }
+            } catch (err) {
+                console.error("Backend fetch failed, using fallback data:", err);
+            }
+        }
 
         // Tab Navigation Logic
         function showSection(id, btn) {
