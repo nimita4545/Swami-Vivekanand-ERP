@@ -1,4 +1,4 @@
-const API_URL = "https://swami-vivekanand-erp-backend2-6.onrender.com";
+const API_URL = "https://swami-vivekanand-erp-backend2-7.onrender.com";
 
 let globalStudents = [];
 
