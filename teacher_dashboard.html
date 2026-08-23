@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Dashboard - Swami Vivekanand School ERP</title>
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f8fb; color: #0d253f; display: flex; min-height: 100vh; }
@@ -63,6 +65,7 @@
         <a class="nav-item active" onclick="showSection('profileSec', this)">Profile & Students</a>
         <a class="nav-item" onclick="showSection('attendanceSec', this)">Mark Attendance</a>
         <a class="nav-item" onclick="showSection('marksSec', this)">Mark Student Marks</a>
+        <a class="nav-item" onclick="showSection('analyticsSec', this)">Class Analytics</a>
         <a class="nav-item" onclick="showSection('timetableSec', this)">My Timetable</a>
         <a class="nav-item" onclick="showSection('holidaySec', this)">School Holidays</a>
         <button class="logout-btn" onclick="logout()">Logout</button>
@@ -142,7 +145,32 @@
             </table>
         </div>
 
-        <!-- 4. Teacher Timetable Section -->
+        <!-- 4. Class Performance Analytics Section -->
+        <div id="analyticsSec" class="section">
+            <h3>Class Performance Analytics (<span id="analyticsClassLabel">5th A</span>)</h3>
+            
+            <!-- Summary Metric Cards -->
+            <div class="card-grid">
+                <div class="card"><label>Class Average Score</label><p id="avgScore">0%</p></div>
+                <div class="card"><label>Pass Percentage</label><p id="passPercent">0%</p></div>
+                <div class="card"><label>Class Topper</label><p id="classTopper">-</p></div>
+                <div class="card"><label>Needs Support</label><p id="failCount">0 Students</p></div>
+            </div>
+
+            <!-- Analytics Charts Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div style="background: #ffffff; padding: 15px; border: 1px solid #c8d6e5; border-radius: 8px;">
+                    <h4 style="color: #003366; margin-bottom: 10px; text-align: center;">Marks Grade Breakdown</h4>
+                    <canvas id="marksDistributionChart"></canvas>
+                </div>
+                <div style="background: #ffffff; padding: 15px; border: 1px solid #c8d6e5; border-radius: 8px;">
+                    <h4 style="color: #003366; margin-bottom: 10px; text-align: center;">Subject-wise Average Marks</h4>
+                    <canvas id="subjectAvgChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Teacher Timetable Section -->
         <div id="timetableSec" class="section">
             <h3>Teacher Timetable</h3>
             <div id="timetableContainer">
@@ -164,7 +192,7 @@
             </div>
         </div>
 
-        <!-- 5. Holiday Section -->
+        <!-- 6. Holiday Section -->
         <div id="holidaySec" class="section">
             <h3>Academic School Holidays</h3>
             <table>
@@ -181,7 +209,7 @@
 
     </div>
 
-    <!-- 6. AI Teacher Assistant Chatbot -->
+    <!-- 7. AI Teacher Assistant Chatbot -->
     <button class="chatbot-btn" onclick="toggleChat()">💬 Teacher Assistant</button>
     <div class="chat-window" id="chatWindow">
         <div class="chat-header">
