@@ -80,8 +80,8 @@
             <div class="card-grid">
                 <div class="card"><label>Admin Name</label><p id="admName">Admin Staff</p></div>
                 <div class="card"><label>Designation</label><p id="admRole">System Administrator</p></div>
-                <div class="card"><label>Total Enrolled Students</label><p id="totalStudents">1,250</p></div>
-                <div class="card"><label>Total Teaching Staff</label><p id="totalTeachers">45</p></div>
+                <div class="card"><label>Total Enrolled Students</label><p id="totalStudents"><span id="totalStudentCount">0</span></p></div>
+                <div class="card"><label>Total Teaching Staff</label><p id="totalTeachers"><span id="totalTeacherCount">0</span></p></div>
             </div>
         </div>
 
@@ -104,12 +104,10 @@
             <!-- Directory Table -->
             <table>
                 <thead>
-                    <tr><th>Roll No</th><th>Student Name</th><th>Class & Div</th><th>School ID</th><th>Action</th></tr>
+                    <tr><th>Roll No</th><th>Student Name</th><th>Class & Div</th><th>Father Name / Info</th><th>School ID / Action</th></tr>
                 </thead>
-                <tbody id="studentTableBody">
-                    <tr><td>1</td><td>Nikhil Kokate</td><td>5th A</td><td>SCH484</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td></tr>
-                    <tr><td>2</td><td>Rutuparn Shinde</td><td>5th A</td><td>SCH563</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td></tr>
-                    <tr><td>3</td><td>Sarika Patil</td><td>5th A</td><td>SCH284</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td></tr>
+                <tbody id="adminStudentTableBody">
+                    <!-- Populated dynamically by admin_dashboard.js -->
                 </tbody>
             </table>
         </div>
@@ -133,12 +131,10 @@
             <!-- Teacher Directory Table -->
             <table>
                 <thead>
-                    <tr><th>Teacher Name</th><th>Class Assigned</th><th>Education</th><th>Username</th><th>Action</th></tr>
+                    <tr><th>#</th><th>Teacher Name</th><th>Class Assigned</th><th>Education</th><th>Role</th></tr>
                 </thead>
-                <tbody id="teacherTableBody">
-                    <tr><td>Dilip Patil</td><td>5th A</td><td>B.Com. B.Ed</td><td>dilip1</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td></tr>
-                    <tr><td>Shobha Joshi</td><td>5th B</td><td>D.Ed</td><td>shobha2</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td></tr>
-                    <tr><td>Vijay Shinde</td><td>5th C</td><td>M.Sc. B.Ed</td><td>vijay3</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td></tr>
+                <tbody id="adminTeacherTableBody">
+                    <!-- Populated dynamically by admin_dashboard.js -->
                 </tbody>
             </table>
         </div>
@@ -223,10 +219,10 @@
                 return;
             }
 
-            const tbody = document.getElementById('studentTableBody');
+            const tbody = document.getElementById('adminStudentTableBody');
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${roll}</td><td>${name}</td><td>${cls}</td><td>${id}</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td>`;
-            tbody.appendChild(tr);
+            tr.innerHTML = `<td>${roll}</td><td>${name}</td><td>${cls}</td><td>N/A</td><td>${id}</td>`;
+            tbody.prepend(tr);
 
             document.getElementById('stuName').value = '';
             document.getElementById('stuClass').value = '';
@@ -246,20 +242,16 @@
                 return;
             }
 
-            const tbody = document.getElementById('teacherTableBody');
+            const tbody = document.getElementById('adminTeacherTableBody');
+            const count = tbody.children.length + 1;
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${name}</td><td>${cls}</td><td>${edu}</td><td>${user}</td><td><button class="btn btn-danger" onclick="deleteRow(this)">Remove</button></td>`;
-            tbody.appendChild(tr);
+            tr.innerHTML = `<td>${count}</td><td>${name}</td><td>${cls}</td><td>${edu}</td><td>Teacher</td>`;
+            tbody.prepend(tr);
 
             document.getElementById('tchNameInput').value = '';
             document.getElementById('tchClassInput').value = '';
             document.getElementById('tchEduInput').value = '';
             document.getElementById('tchUserInput').value = '';
-        }
-
-        // Delete Row
-        function deleteRow(btn) {
-            btn.closest('tr').remove();
         }
 
         // Post Notice
@@ -297,9 +289,9 @@
             const q = msg.toLowerCase();
 
             if (q.includes("student") || q.includes("admission")) {
-                response = "There are currently 1,250 registered students across grades 5th to 10th.";
+                response = "There are currently registered students dynamically fetched across standard 5th divisions.";
             } else if (q.includes("teacher") || q.includes("staff")) {
-                response = "There are 45 active teaching staff members assigned across 18 class divisions.";
+                response = "Active teaching staff details are dynamically loaded from your teacher records.";
             } else if (q.includes("notice") || q.includes("announcement")) {
                 response = "You can publish real-time notices under the 'School Notice Board' tab.";
             } else {
@@ -323,5 +315,8 @@
             window.location.href = 'index.html';
         }
     </script>
+
+    <!-- Admin Dashboard Data Handler -->
+    <script src="admin_dashboard.js"></script>
 </body>
 </html>
