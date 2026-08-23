@@ -84,10 +84,10 @@
             <h3 style="margin-top: 25px;">Assigned Class Student List (<span id="assignedClassLabel">5th A</span>)</h3>
             <table>
                 <thead>
-                    <tr><th>Roll No</th><th>Student Name</th><th>Father Name</th><th>Mother Name</th><th>School ID</th></tr>
+                    <tr><th>Sr No</th><th>Roll No</th><th>Student Name</th><th>Username</th><th>School ID</th><th>Father Name</th></tr>
                 </thead>
-                <tbody id="studentListTable">
-                    <!-- Populated dynamically via backend API -->
+                <tbody id="studentTableBody">
+                    <!-- Populated dynamically via backend API in teacher_dashboard.js -->
                 </tbody>
             </table>
         </div>
@@ -105,7 +105,7 @@
                     <tr><th>Roll No</th><th>Student Name</th><th>Present</th><th>Absent</th></tr>
                 </thead>
                 <tbody id="attendanceTable">
-                    <!-- Populated dynamically via backend API -->
+                    <!-- Populated dynamically via backend API in teacher_dashboard.js -->
                 </tbody>
             </table>
         </div>
@@ -137,7 +137,7 @@
                     </tr>
                 </thead>
                 <tbody id="marksTable">
-                    <!-- Populated dynamically via backend API -->
+                    <!-- Populated dynamically via backend API in teacher_dashboard.js -->
                 </tbody>
             </table>
         </div>
@@ -202,166 +202,7 @@
         </div>
     </div>
 
-    <script>
-        const BACKEND_URL = 'https://swami-vivekanand-erp-backend2-11.onrender.com';
-        
-        // Default fallback dataset with term exam added
-        let studentDatabase = [
-            { roll: 1, name: "Nikhil Kokate", father: "Omkar Kokate", mother: "Bhagyashree Kokate", class: "5th A", sch_id: "SCH484", ut1: 18, ut2: 17, assign: 9, oral: 9, term: 35, total: 88 },
-            { roll: 2, name: "Rutuparn Shinde", father: "Tejas Shinde", mother: "Deepa Shinde", class: "5th A", sch_id: "SCH563", ut1: 19, ut2: 18, assign: 10, oral: 10, term: 36, total: 93 },
-            { roll: 3, name: "Sarika Patil", father: "Ajinkya Patil", mother: "Pooja Patil", class: "5th A", sch_id: "SCH284", ut1: 15, ut2: 14, assign: 8, oral: 8, term: 28, total: 73 },
-            { roll: 4, name: "Rutuja Joshi", father: "Suraj Joshi", mother: "Swati Joshi", class: "5th A", sch_id: "SCH468", ut1: 7, ut2: 6, assign: 4, oral: 3, term: 12, total: 32 },
-            { roll: 5, name: "Rutuparn Chougule", father: "Ganesh Chougule", mother: "Manasi Chougule", class: "5th A", sch_id: "SCH218", ut1: 20, ut2: 19, assign: 10, oral: 9, term: 38, total: 96 },
-            { roll: 6, name: "Amit Kulkarni", father: "Prakash Kulkarni", mother: "Anjali Kulkarni", class: "5th A", sch_id: "SCH105", ut1: 16, ut2: 17, assign: 8, oral: 9, term: 30, total: 80 },
-            { roll: 7, name: "Sneha Pawar", father: "Sanjay Pawar", mother: "Sunita Pawar", class: "5th A", sch_id: "SCH302", ut1: 5, ut2: 6, assign: 3, oral: 4, term: 10, total: 28 }
-        ];
-
-        // Load Session, Fetch API Data, and Populate Profile & Tables
-        document.addEventListener('DOMContentLoaded', async () => {
-            const rawUser = localStorage.getItem('userData');
-            let user = rawUser ? JSON.parse(rawUser) : { name: "Dilip Patil", class_assigned: "5th A", role: "Class Teacher", education: "B.Com. B.Ed" };
-
-            document.getElementById('tchName').innerText = user.name || "Dilip Patil";
-            document.getElementById('tchEdu').innerText = user.education || "B.Com. B.Ed";
-            document.getElementById('tchClass').innerText = user.class_assigned || "5th A";
-            document.getElementById('tchRole').innerText = user.role || "Class Teacher";
-            document.getElementById('assignedClassLabel').innerText = user.class_assigned || "5th A";
-
-            // Parse assigned class (e.g. "5th A" -> class: "5th", div: "A")
-            let assignedClass = "5th";
-            let assignedDiv = "A";
-            if (user.class_assigned) {
-                const parts = user.class_assigned.trim().split(' ');
-                if (parts.length >= 2) {
-                    assignedClass = parts[0];
-                    assignedDiv = parts[1];
-                } else if (parts.length === 1) {
-                    assignedClass = parts[0];
-                }
-            }
-
-            await loadStudentsFromApi(assignedClass, assignedDiv);
-            renderStudentTables();
-        });
-
-        // Async function to fetch students from Python backend API
-        async function loadStudentsFromApi(cls, div) {
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/teacher/students?class=${encodeURIComponent(cls)}&div=${encodeURIComponent(div)}`);
-                const data = await response.json();
-
-                if (response.ok && data.success && data.students && data.students.length > 0) {
-                    studentDatabase = data.students.map(s => ({
-                        roll: s['Roll No'] || s.roll || '',
-                        name: s['Student Name'] || s.name || '',
-                        father: s['Father Name'] || s.father || 'N/A',
-                        mother: s['Mother Name'] || s.mother || 'N/A',
-                        class: `${s['Class'] || ''} ${s['Div'] || ''}`.trim() || `${cls} ${div}`,
-                        sch_id: s['School ID'] || s.sch_id || 'N/A',
-                        ut1: s.ut1 !== undefined ? s.ut1 : 15,
-                        ut2: s.ut2 !== undefined ? s.ut2 : 15,
-                        assign: s.assign !== undefined ? s.assign : 8,
-                        oral: s.oral !== undefined ? s.oral : 8,
-                        term: s.term !== undefined ? s.term : 30,
-                        total: s.total !== undefined ? s.total : 76
-                    }));
-                }
-            } catch (err) {
-                console.error("Backend fetch failed, using fallback data:", err);
-            }
-        }
-
-        // Tab Navigation Logic
-        function showSection(id, btn) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            btn.classList.add('active');
-        }
-
-        // Render Student List, Attendance Table, and Marks Table
-        function renderStudentTables() {
-            let listHtml = "", attHtml = "", marksHtml = "";
-
-            studentDatabase.forEach(s => {
-                listHtml += `<tr><td>${s.roll}</td><td>${s.name}</td><td>${s.father}</td><td>${s.mother}</td><td>${s.sch_id}</td></tr>`;
-                
-                attHtml += `<tr>
-                    <td>${s.roll}</td>
-                    <td>${s.name}</td>
-                    <td><input type="radio" name="att_${s.roll}" value="Present" class="att-radio" checked></td>
-                    <td><input type="radio" name="att_${s.roll}" value="Absent" class="att-radio"></td>
-                </tr>`;
-
-                marksHtml += `<tr>
-                    <td>${s.roll}</td>
-                    <td>${s.name}</td>
-                    <td><input type="number" class="mark-input" value="${s.ut1}" max="20"></td>
-                    <td><input type="number" class="mark-input" value="${s.ut2}" max="20"></td>
-                    <td><input type="number" class="mark-input" value="${s.assign}" max="10"></td>
-                    <td><input type="number" class="mark-input" value="${s.oral}" max="10"></td>
-                    <td><input type="number" class="mark-input" value="${s.term}" max="40"></td>
-                </tr>`;
-            });
-
-            document.getElementById('studentListTable').innerHTML = listHtml;
-            document.getElementById('attendanceTable').innerHTML = attHtml;
-            document.getElementById('marksTable').innerHTML = marksHtml;
-        }
-
-        function saveAttendance() {
-            alert("Attendance recorded successfully!");
-        }
-
-        function saveMarks() {
-            alert("Student marks saved successfully!");
-        }
-
-        // AI Chatbot Functions
-        function toggleChat() {
-            const win = document.getElementById('chatWindow');
-            win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
-        }
-
-        function sendChat() {
-            const input = document.getElementById('chatInput');
-            const msg = input.value.trim();
-            if(!msg) return;
-
-            appendMsg(msg, 'user');
-            input.value = '';
-
-            let response = "";
-            const q = msg.toLowerCase();
-
-            if (q.includes("attendance") || q.includes("how to mark")) {
-                response = "To mark attendance, click on 'Mark Attendance' in the left menu, choose Present/Absent radio buttons for each student, and click 'Submit Attendance'.";
-            } else if (q.includes("top three") || q.includes("top 3") || q.includes("topper")) {
-                response = "<b>Top 3 Students in 5th A:</b><br>1. Rutuparn Chougule (96/100)<br>2. Rutuparn Shinde (93/100)<br>3. Nikhil Kokate (88/100)";
-            } else if (q.includes("fail") || q.includes("failed")) {
-                response = "<b>Failed Students (below 35%):</b><br>1. Rutuja Joshi (32/100)<br>2. Sneha Pawar (28/100)";
-            } else if (q.includes("pass") || q.includes("passed") || q.includes("how many")) {
-                response = "<b>Pass Statistics:</b><br>Total Students: 7<br>Passed: 5 (71.4%)<br>Failed: 2 (28.6%)";
-            } else {
-                response = "I can assist you with attendance guidelines, identifying top performing or failed students, and pass percentage statistics.";
-            }
-
-            setTimeout(() => appendMsg(response, 'bot'), 400);
-        }
-
-        function appendMsg(text, type) {
-            const body = document.getElementById('chatBody');
-            const div = document.createElement('div');
-            div.className = `chat-msg ${type}`;
-            div.innerHTML = text;
-            body.appendChild(div);
-            body.scrollTop = body.scrollHeight;
-        }
-
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
+    <!-- External Script Attachment -->
     <script src="teacher_dashboard.js"></script>
 </body>
 </html>
