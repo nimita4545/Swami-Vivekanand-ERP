@@ -133,6 +133,7 @@
                         <th>Unit Test 2 (20)</th>
                         <th>Assignment (10)</th>
                         <th>Oral Marks (10)</th>
+                        <th>Term Exam (40)</th>
                     </tr>
                 </thead>
                 <tbody id="marksTable">
@@ -204,15 +205,15 @@
     <script>
         const BACKEND_URL = 'https://swami-vivekanand-erp-backend2-11.onrender.com';
         
-        // Default fallback dataset
+        // Default fallback dataset with term exam added
         let studentDatabase = [
-            { roll: 1, name: "Nikhil Kokate", father: "Omkar Kokate", mother: "Bhagyashree Kokate", class: "5th A", sch_id: "SCH484", ut1: 18, ut2: 17, assign: 9, oral: 9, total: 53 },
-            { roll: 2, name: "Rutuparn Shinde", father: "Tejas Shinde", mother: "Deepa Shinde", class: "5th A", sch_id: "SCH563", ut1: 19, ut2: 18, assign: 10, oral: 10, total: 57 },
-            { roll: 3, name: "Sarika Patil", father: "Ajinkya Patil", mother: "Pooja Patil", class: "5th A", sch_id: "SCH284", ut1: 15, ut2: 14, assign: 8, oral: 8, total: 45 },
-            { roll: 4, name: "Rutuja Joshi", father: "Suraj Joshi", mother: "Swati Joshi", class: "5th A", sch_id: "SCH468", ut1: 7, ut2: 6, assign: 4, oral: 3, total: 20 },
-            { roll: 5, name: "Rutuparn Chougule", father: "Ganesh Chougule", mother: "Manasi Chougule", class: "5th A", sch_id: "SCH218", ut1: 20, ut2: 19, assign: 10, oral: 9, total: 58 },
-            { roll: 6, name: "Amit Kulkarni", father: "Prakash Kulkarni", mother: "Anjali Kulkarni", class: "5th A", sch_id: "SCH105", ut1: 16, ut2: 17, assign: 8, oral: 9, total: 50 },
-            { roll: 7, name: "Sneha Pawar", father: "Sanjay Pawar", mother: "Sunita Pawar", class: "5th A", sch_id: "SCH302", ut1: 5, ut2: 6, assign: 3, oral: 4, total: 18 }
+            { roll: 1, name: "Nikhil Kokate", father: "Omkar Kokate", mother: "Bhagyashree Kokate", class: "5th A", sch_id: "SCH484", ut1: 18, ut2: 17, assign: 9, oral: 9, term: 35, total: 88 },
+            { roll: 2, name: "Rutuparn Shinde", father: "Tejas Shinde", mother: "Deepa Shinde", class: "5th A", sch_id: "SCH563", ut1: 19, ut2: 18, assign: 10, oral: 10, term: 36, total: 93 },
+            { roll: 3, name: "Sarika Patil", father: "Ajinkya Patil", mother: "Pooja Patil", class: "5th A", sch_id: "SCH284", ut1: 15, ut2: 14, assign: 8, oral: 8, term: 28, total: 73 },
+            { roll: 4, name: "Rutuja Joshi", father: "Suraj Joshi", mother: "Swati Joshi", class: "5th A", sch_id: "SCH468", ut1: 7, ut2: 6, assign: 4, oral: 3, term: 12, total: 32 },
+            { roll: 5, name: "Rutuparn Chougule", father: "Ganesh Chougule", mother: "Manasi Chougule", class: "5th A", sch_id: "SCH218", ut1: 20, ut2: 19, assign: 10, oral: 9, term: 38, total: 96 },
+            { roll: 6, name: "Amit Kulkarni", father: "Prakash Kulkarni", mother: "Anjali Kulkarni", class: "5th A", sch_id: "SCH105", ut1: 16, ut2: 17, assign: 8, oral: 9, term: 30, total: 80 },
+            { roll: 7, name: "Sneha Pawar", father: "Sanjay Pawar", mother: "Sunita Pawar", class: "5th A", sch_id: "SCH302", ut1: 5, ut2: 6, assign: 3, oral: 4, term: 10, total: 28 }
         ];
 
         // Load Session, Fetch API Data, and Populate Profile & Tables
@@ -261,7 +262,8 @@
                         ut2: s.ut2 !== undefined ? s.ut2 : 15,
                         assign: s.assign !== undefined ? s.assign : 8,
                         oral: s.oral !== undefined ? s.oral : 8,
-                        total: s.total !== undefined ? s.total : 46
+                        term: s.term !== undefined ? s.term : 30,
+                        total: s.total !== undefined ? s.total : 76
                     }));
                 }
             } catch (err) {
@@ -298,6 +300,7 @@
                     <td><input type="number" class="mark-input" value="${s.ut2}" max="20"></td>
                     <td><input type="number" class="mark-input" value="${s.assign}" max="10"></td>
                     <td><input type="number" class="mark-input" value="${s.oral}" max="10"></td>
+                    <td><input type="number" class="mark-input" value="${s.term}" max="40"></td>
                 </tr>`;
             });
 
@@ -334,9 +337,9 @@
             if (q.includes("attendance") || q.includes("how to mark")) {
                 response = "To mark attendance, click on 'Mark Attendance' in the left menu, choose Present/Absent radio buttons for each student, and click 'Submit Attendance'.";
             } else if (q.includes("top three") || q.includes("top 3") || q.includes("topper")) {
-                response = "<b>Top 3 Students in 5th A:</b><br>1. Rutuparn Chougule (58/60)<br>2. Rutuparn Shinde (57/60)<br>3. Nikhil Kokate (53/60)";
+                response = "<b>Top 3 Students in 5th A:</b><br>1. Rutuparn Chougule (96/100)<br>2. Rutuparn Shinde (93/100)<br>3. Nikhil Kokate (88/100)";
             } else if (q.includes("fail") || q.includes("failed")) {
-                response = "<b>Failed Students (below 35%):</b><br>1. Rutuja Joshi (20/60)<br>2. Sneha Pawar (18/60)";
+                response = "<b>Failed Students (below 35%):</b><br>1. Rutuja Joshi (32/100)<br>2. Sneha Pawar (28/100)";
             } else if (q.includes("pass") || q.includes("passed") || q.includes("how many")) {
                 response = "<b>Pass Statistics:</b><br>Total Students: 7<br>Passed: 5 (71.4%)<br>Failed: 2 (28.6%)";
             } else {
