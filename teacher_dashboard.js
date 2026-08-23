@@ -3,6 +3,10 @@ const BACKEND_URL = 'https://swami-vivekanand-erp-backend2-13.onrender.com';
 // Global state for student data across all dashboard modules
 let globalStudentsData = [];
 
+// Chart Instances
+let marksChart = null;
+let subjectChart = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initialize Teacher Profile details from localStorage
     const rawUser = localStorage.getItem('userData');
@@ -13,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (document.getElementById('tchClass')) document.getElementById('tchClass').innerText = user.class_assigned || "5th A";
     if (document.getElementById('tchRole')) document.getElementById('tchRole').innerText = user.role || "Class Teacher";
     if (document.getElementById('assignedClassLabel')) document.getElementById('assignedClassLabel').innerText = user.class_assigned || "5th A";
+    if (document.getElementById('analyticsClassLabel')) document.getElementById('analyticsClassLabel').innerText = user.class_assigned || "5th A";
 
     // 2. Parse class and division from assigned class (e.g., "5th A")
     let selectedClass = "5th";
@@ -129,7 +134,7 @@ function renderAttendanceAndMarksTables(students) {
                     <td>${name}</td>
                     <td><input type="number" class="mark-input" value="${s.ut1 !== undefined ? s.ut1 : 15}" max="20"></td>
                     <td><input type="number" class="mark-input" value="${s.ut2 !== undefined ? s.ut2 : 15}" max="20"></td>
-                    <td><input type="number" class="mark-input" value="${s.assign !== undefined ? s.assign : 8}" max="10"></td>
+                    <td><input type="number" class="mark-input" value="${s.assign !== undefined ? s.assign : 8}" max="10"> max="10"></td>
                     <td><input type="number" class="mark-input" value="${s.oral !== undefined ? s.oral : 8}" max="10"></td>
                     <td><input type="number" class="mark-input" value="${s.term !== undefined ? s.term : 30}" max="40"></td>
                 </tr>`;
@@ -144,6 +149,96 @@ function showSection(id, btn) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     btn.classList.add('active');
+
+    // Trigger Analytics Chart Rendering when switching to analytics tab
+    if (id === 'analyticsSec') {
+        renderAnalyticsCharts();
+    }
+}
+
+// Analytics Rendering Logic
+function renderAnalyticsCharts() {
+    if (!globalStudentsData || globalStudentsData.length === 0) return;
+
+    let distinction = 0, firstClass = 0, passClass = 0, failClass = 0;
+    let totalScoreSum = 0;
+    let highestScore = -1;
+    let topperName = "-";
+
+    globalStudentsData.forEach(s => {
+        const ut1 = s.ut1 || 0;
+        const ut2 = s.ut2 || 0;
+        const assign = s.assign || 0;
+        const oral = s.oral || 0;
+        const term = s.term || 0;
+        const total = s.total !== undefined ? s.total : (ut1 + ut2 + assign + oral + term);
+
+        totalScoreSum += total;
+
+        if (total > highestScore) {
+            highestScore = total;
+            topperName = `${s['Student Name'] || s.name} (${total})`;
+        }
+
+        if (total >= 75) distinction++;
+        else if (total >= 60) firstClass++;
+        else if (total >= 35) passClass++;
+        else failClass++;
+    });
+
+    const totalStudents = globalStudentsData.length;
+    const passedStudents = distinction + firstClass + passClass;
+    const avgScore = (totalScoreSum / totalStudents).toFixed(1);
+    const passPercentage = ((passedStudents / totalStudents) * 100).toFixed(1);
+
+    // Update Summary Metric Cards
+    if (document.getElementById('avgScore')) document.getElementById('avgScore').innerText = `${avgScore}%`;
+    if (document.getElementById('passPercent')) document.getElementById('passPercent').innerText = `${passPercentage}%`;
+    if (document.getElementById('classTopper')) document.getElementById('classTopper').innerText = topperName;
+    if (document.getElementById('failCount')) document.getElementById('failCount').innerText = `${failClass} Students`;
+
+    // 1. Marks Distribution Doughnut Chart
+    const marksCtx = document.getElementById('marksDistributionChart');
+    if (marksCtx) {
+        if (marksChart) marksChart.destroy();
+        marksChart = new Chart(marksCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Distinction (75%+)', 'First Class (60-74%)', 'Pass Class (35-59%)', 'Needs Support (<35%)'],
+                datasets: [{
+                    data: [distinction, firstClass, passClass, failClass],
+                    backgroundColor: ['#006633', '#0055a5', '#f39c12', '#c0392b']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    }
+
+    // 2. Subject Average Bar Chart
+    const subjCtx = document.getElementById('subjectAvgChart');
+    if (subjCtx) {
+        if (subjectChart) subjectChart.destroy();
+        subjectChart = new Chart(subjCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Mathematics', 'English', 'Science', 'Hindi', 'Marathi'],
+                datasets: [{
+                    label: 'Class Average (%)',
+                    data: [78, 65, 72, 80, 84],
+                    backgroundColor: '#003366'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, max: 100 }
+                }
+            }
+        });
+    }
 }
 
 // Form Handlers
