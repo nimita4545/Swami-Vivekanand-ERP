@@ -10,7 +10,12 @@ let subjectChart = null;
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initialize Teacher Profile details from localStorage
     const rawUser = localStorage.getItem('userData');
-    let user = rawUser ? JSON.parse(rawUser) : { name: "Dilip Patil", class_assigned: "5th A", role: "Class Teacher", education: "B.Com. B.Ed" };
+    let user = rawUser ? JSON.parse(rawUser) : { 
+        name: "Dilip Patil", 
+        class_assigned: "5th A", 
+        role: "Class Teacher", 
+        education: "B.Com. B.Ed" 
+    };
 
     if (document.getElementById('tchName')) document.getElementById('tchName').innerText = user.name || "Dilip Patil";
     if (document.getElementById('tchEdu')) document.getElementById('tchEdu').innerText = user.education || "B.Com. B.Ed";
@@ -44,7 +49,7 @@ async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
         const response = await fetch(`${BACKEND_URL}/api/teacher/students?class=${selectedClass}&div=${selectedDiv}`);
         const data = await response.json();
 
-        if (response.ok && data.success && data.students) {
+        if (response.ok && data.success && data.students && data.students.length > 0) {
             globalStudentsData = data.students;
             tableBody.innerHTML = '';
             
@@ -52,11 +57,11 @@ async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
                 const row = `
                     <tr>
                         <td>${index + 1}</td>
-                        <td>${student['Roll No'] || ''}</td>
-                        <td>${student['Student Name'] || ''}</td>
-                        <td>${student['Username'] || ''}</td>
-                        <td>${student['School ID'] || ''}</td>
-                        <td>${student['Father Name'] || ''}</td>
+                        <td>${student['Roll No'] || student.roll || ''}</td>
+                        <td>${student['Student Name'] || student.name || ''}</td>
+                        <td>${student['Username'] || student.username || ''}</td>
+                        <td>${student['School ID'] || student.school_id || ''}</td>
+                        <td>${student['Father Name'] || student.father_name || ''}</td>
                     </tr>
                 `;
                 tableBody.innerHTML += row;
@@ -134,7 +139,7 @@ function renderAttendanceAndMarksTables(students) {
                     <td>${name}</td>
                     <td><input type="number" class="mark-input" value="${s.ut1 !== undefined ? s.ut1 : 15}" max="20"></td>
                     <td><input type="number" class="mark-input" value="${s.ut2 !== undefined ? s.ut2 : 15}" max="20"></td>
-                    <td><input type="number" class="mark-input" value="${s.assign !== undefined ? s.assign : 8}" max="10"> max="10"></td>
+                    <td><input type="number" class="mark-input" value="${s.assign !== undefined ? s.assign : 8}" max="10"></td>
                     <td><input type="number" class="mark-input" value="${s.oral !== undefined ? s.oral : 8}" max="10"></td>
                     <td><input type="number" class="mark-input" value="${s.term !== undefined ? s.term : 30}" max="40"></td>
                 </tr>`;
@@ -147,8 +152,10 @@ function renderAttendanceAndMarksTables(students) {
 function showSection(id, btn) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    btn.classList.add('active');
+    
+    const targetSection = document.getElementById(id);
+    if (targetSection) targetSection.classList.add('active');
+    if (btn) btn.classList.add('active');
 
     // Trigger Analytics Chart Rendering when switching to analytics tab
     if (id === 'analyticsSec') {
@@ -166,12 +173,12 @@ function renderAnalyticsCharts() {
     let topperName = "-";
 
     globalStudentsData.forEach(s => {
-        const ut1 = s.ut1 || 0;
-        const ut2 = s.ut2 || 0;
-        const assign = s.assign || 0;
-        const oral = s.oral || 0;
-        const term = s.term || 0;
-        const total = s.total !== undefined ? s.total : (ut1 + ut2 + assign + oral + term);
+        const ut1 = Number(s.ut1 || 0);
+        const ut2 = Number(s.ut2 || 0);
+        const assign = Number(s.assign || 0);
+        const oral = Number(s.oral || 0);
+        const term = Number(s.term || 0);
+        const total = s.total !== undefined ? Number(s.total) : (ut1 + ut2 + assign + oral + term);
 
         totalScoreSum += total;
 
@@ -199,7 +206,7 @@ function renderAnalyticsCharts() {
 
     // 1. Marks Distribution Doughnut Chart
     const marksCtx = document.getElementById('marksDistributionChart');
-    if (marksCtx) {
+    if (marksCtx && typeof Chart !== 'undefined') {
         if (marksChart) marksChart.destroy();
         marksChart = new Chart(marksCtx.getContext('2d'), {
             type: 'doughnut',
@@ -219,7 +226,7 @@ function renderAnalyticsCharts() {
 
     // 2. Subject Average Bar Chart
     const subjCtx = document.getElementById('subjectAvgChart');
-    if (subjCtx) {
+    if (subjCtx && typeof Chart !== 'undefined') {
         if (subjectChart) subjectChart.destroy();
         subjectChart = new Chart(subjCtx.getContext('2d'), {
             type: 'bar',
@@ -254,7 +261,7 @@ function saveMarks() {
 function toggleChat() {
     const win = document.getElementById('chatWindow');
     if (win) {
-        win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+        win.style.display = (win.style.display === 'flex' || win.style.display === 'block') ? 'none' : 'flex';
     }
 }
 
@@ -269,14 +276,36 @@ function sendChat() {
     let response = "";
     const q = msg.toLowerCase();
 
+    // Dynamically calculate statistics from current global state
+    const studentStats = globalStudentsData.map(s => {
+        const ut1 = Number(s.ut1 || 0);
+        const ut2 = Number(s.ut2 || 0);
+        const assign = Number(s.assign || 0);
+        const oral = Number(s.oral || 0);
+        const term = Number(s.term || 0);
+        const total = s.total !== undefined ? Number(s.total) : (ut1 + ut2 + assign + oral + term);
+        return { name: s['Student Name'] || s.name, total };
+    }).sort((a, b) => b.total - a.total);
+
     if (q.includes("attendance") || q.includes("how to mark")) {
         response = "To mark attendance, select 'Mark Attendance' from the sidebar, mark Present or Absent for each student, and click 'Submit Attendance'.";
     } else if (q.includes("top three") || q.includes("top 3") || q.includes("topper")) {
-        response = "<b>Top 3 Students:</b><br>1. Rutuparn Chougule (96/100)<br>2. Rutuparn Shinde (93/100)<br>3. Nikhil Kokate (88/100)";
+        const top3 = studentStats.slice(0, 3);
+        response = "<b>Top Performing Students:</b><br>" + 
+            top3.map((s, idx) => `${idx + 1}. ${s.name} (${s.total}/100)`).join('<br>');
     } else if (q.includes("fail") || q.includes("failed")) {
-        response = "<b>Failed Students (below 35%):</b><br>1. Rutuja Joshi (32/100)";
+        const failed = studentStats.filter(s => s.total < 35);
+        if (failed.length > 0) {
+            response = "<b>Students Needing Support (<35%):</b><br>" + 
+                failed.map((s, idx) => `${idx + 1}. ${s.name} (${s.total}/100)`).join('<br>');
+        } else {
+            response = "Great news! All students in this class have passing marks.";
+        }
     } else if (q.includes("pass") || q.includes("passed") || q.includes("how many")) {
-        response = "<b>Pass Statistics:</b><br>Total Students: 5<br>Passed: 4 (80%)<br>Failed: 1 (20%)";
+        const total = studentStats.length;
+        const passed = studentStats.filter(s => s.total >= 35).length;
+        const passRate = total > 0 ? ((passed / total) * 100).toFixed(1) : 0;
+        response = `<b>Class Pass Statistics:</b><br>Total Students: ${total}<br>Passed: ${passed} (${passRate}%)<br>Needs Support: ${total - passed}`;
     } else {
         response = "I am your AI assistant. You can ask me about attendance rules, top-performing students, or class pass percentages.";
     }
