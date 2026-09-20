@@ -41,9 +41,16 @@
         .btn:hover { background: #003366; }
         .btn-success { background: #006633; }
         .btn-success:hover { background: #004d26; }
-        .mark-input { width: 60px; padding: 5px; text-align: center; border: 1px solid #0055a5; border-radius: 4px; font-weight: bold; }
+        .btn-analytics { background: #0055a5; color: #ffffff; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+        .btn-analytics:hover { background: #003366; }
         
+        .mark-input { width: 60px; padding: 5px; text-align: center; border: 1px solid #0055a5; border-radius: 4px; font-weight: bold; }
         .att-radio { cursor: pointer; transform: scale(1.2); accent-color: #0055a5; }
+
+        /* Analytics Modal Styling */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 34, 68, 0.6); z-index: 2000; align-items: center; justify-content: center; }
+        .modal-card { background: #ffffff; border-radius: 8px; width: 90%; max-width: 650px; padding: 25px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3); position: relative; border-top: 5px solid #0055a5; }
+        .modal-close { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #003366; font-weight: bold; }
 
         /* Floating AI Chatbot Widget */
         .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: #003366; color: #ffffff; border: 2px solid #ffffff; padding: 14px 22px; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 51, 102, 0.3); z-index: 1000; }
@@ -84,10 +91,28 @@
                 <div class="card"><label>Role</label><p id="tchRole">Class Teacher</p></div>
             </div>
 
-            <h3 style="margin-top: 25px;">Assigned Class Student List (<span id="assignedClassLabel">5th A</span>)</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px; margin-bottom: 10px;">
+                <h3>Assigned Class Student List (<span id="assignedClassLabel">5th A</span>)</h3>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label><b>Division:</b></label>
+                    <select id="divisionSelect" onchange="switchDivision(this.value)" style="padding: 6px 12px; border: 1px solid #0055a5; border-radius: 4px; font-weight: bold;">
+                        <option value="A">5th A</option>
+                        <option value="B">5th B</option>
+                        <option value="C">5th C</option>
+                    </select>
+                </div>
+            </div>
+
             <table>
                 <thead>
-                    <tr><th>Sr No</th><th>Roll No</th><th>Student Name</th><th>Username</th><th>School ID</th><th>Father Name</th></tr>
+                    <tr>
+                        <th>Sr No</th>
+                        <th>Roll No</th>
+                        <th>Student Name</th>
+                        <th>School ID</th>
+                        <th>Father Name</th>
+                        <th>Individual Performance</th>
+                    </tr>
                 </thead>
                 <tbody id="studentTableBody">
                     <!-- Populated dynamically via backend API in teacher_dashboard.js -->
@@ -207,6 +232,42 @@
             </table>
         </div>
 
+    </div>
+
+    <!-- Student Analytics Detail Modal Overlay -->
+    <div id="studentAnalyticsModal" class="modal-overlay">
+        <div class="modal-card">
+            <span class="modal-close" onclick="closeAnalyticsModal()">&times;</span>
+            <h3 style="border-bottom: 2px solid #0055a5; padding-bottom: 8px; margin-bottom: 15px;">Detailed Student Analytics</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div style="background: #f0f6fb; padding: 12px; border-radius: 6px;">
+                    <label style="font-size: 0.8rem; color: #4a6b82; font-weight: bold;">STUDENT NAME</label>
+                    <p id="modalStudentName" style="font-size: 1.1rem; font-weight: bold; color: #003366;">-</p>
+                </div>
+                <div style="background: #f0f6fb; padding: 12px; border-radius: 6px;">
+                    <label style="font-size: 0.8rem; color: #4a6b82; font-weight: bold;">ROLL / ID</label>
+                    <p id="modalStudentRoll" style="font-size: 1.1rem; font-weight: bold; color: #003366;">-</p>
+                </div>
+            </div>
+
+            <div class="card-grid" style="margin-bottom: 20px;">
+                <div class="card"><label>Attendance</label><p id="modalAttendance">94%</p></div>
+                <div class="card"><label>Total Score</label><p id="modalTotalScore">82%</p></div>
+                <div class="card"><label>Overall Grade</label><p id="modalGrade">A</p></div>
+                <div class="card"><label>Academic Status</label><p id="modalStatus" style="color: #006633;">PASSED</p></div>
+            </div>
+
+            <h4 style="color: #003366; margin-bottom: 10px;">Subject Marks Breakdown</h4>
+            <table>
+                <thead>
+                    <tr><th>Subject</th><th>Total Marks</th><th>Scored Marks</th><th>Percentage</th></tr>
+                </thead>
+                <tbody id="modalSubjectBreakdown">
+                    <!-- Populated dynamically via JS -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- 7. AI Teacher Assistant Chatbot -->
