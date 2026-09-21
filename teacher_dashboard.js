@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (document.getElementById('assignedClassLabel')) document.getElementById('assignedClassLabel').innerText = user.class_assigned || "5th A";
     if (document.getElementById('analyticsClassLabel')) document.getElementById('analyticsClassLabel').innerText = user.class_assigned || "5th A";
 
-    // 2. Parse class and division from assigned class (e.g., "5th A")
+    // 2. Parse class and division from assigned class
     let selectedClass = "5th";
     let selectedDiv = "A";
     if (user.class_assigned) {
@@ -43,6 +43,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const divSelect = document.getElementById('divSelect');
     if (classSelect) classSelect.value = selectedClass;
     if (divSelect) divSelect.value = selectedDiv;
+
+    // Attach subject switch handler if subject dropdown exists
+    const subjSelect = document.getElementById('subjSelect');
+    if (subjSelect) {
+        subjSelect.addEventListener('change', renderAttendanceAndMarksTables);
+    }
 
     // 3. Fetch students and build UI tables
     await fetchAndDisplayStudents(selectedClass, selectedDiv);
@@ -74,17 +80,15 @@ async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
     const storageKey = `studentsData_${selectedClass}_${selectedDiv}`;
     const savedLocalData = localStorage.getItem(storageKey);
 
-    // ==========================================
-    // LOCAL DATABASE PRIORITY (PREVENTS UNDO)
-    // ==========================================
+    // Load local storage if present
     if (savedLocalData) {
-        console.log("Loading permanent data from Local Storage...");
+        console.log("Loading saved data from LocalStorage...");
         globalStudentsData = JSON.parse(savedLocalData);
         renderAllViews();
         return; 
     }
 
-    // Only hit the API if no local data exists yet
+    // Fallback to API call if local storage is empty
     try {
         const response = await fetch(`${BACKEND_URL}/api/teacher/students?class=${selectedClass}&div=${selectedDiv}`);
         const data = await response.json();
@@ -99,7 +103,7 @@ async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
         loadFallbackData();
     }
 
-    // Save initial load to local storage so it becomes permanent
+    // Cache initial load to local storage
     saveLocalState(selectedClass, selectedDiv);
     renderAllViews();
 }
@@ -109,9 +113,8 @@ function saveLocalState(selectedClass, selectedDiv) {
     const div = selectedDiv || document.getElementById('divSelect')?.value || "A";
     const storageKey = `studentsData_${cls}_${div}`;
     
-    // Commit current memory state to browser database permanently
     localStorage.setItem(storageKey, JSON.stringify(globalStudentsData));
-    console.log(`Data for ${cls} ${div} saved permanently to local cache.`);
+    console.log(`Saved to local storage under key: ${storageKey}`);
 }
 
 function processStudentData(students) {
@@ -122,21 +125,21 @@ function processStudentData(students) {
         const school_id = s['School ID'] || s.school_id || `SCH${100 + roll}`;
         const father_name = s['Father Name'] || s.father_name || "Parent Name";
 
-        const ut1 = s.ut1 !== undefined ? Number(s.ut1) : Math.floor(10 + Math.random() * 10);
-        const ut2 = s.ut2 !== undefined ? Number(s.ut2) : Math.floor(10 + Math.random() * 10);
-        const assign = s.assign !== undefined ? Number(s.assign) : Math.floor(5 + Math.random() * 5);
-        const oral = s.oral !== undefined ? Number(s.oral) : Math.floor(5 + Math.random() * 5);
-        const term = s.term !== undefined ? Number(s.term) : Math.floor(20 + Math.random() * 20);
+        const ut1 = s.ut1 !== undefined ? Number(s.ut1) : 15;
+        const ut2 = s.ut2 !== undefined ? Number(s.ut2) : 15;
+        const assign = s.assign !== undefined ? Number(s.assign) : 8;
+        const oral = s.oral !== undefined ? Number(s.oral) : 8;
+        const term = s.term !== undefined ? Number(s.term) : 30;
         const total = ut1 + ut2 + assign + oral + term;
 
-        const attendance = s.attendance !== undefined ? Number(s.attendance) : Math.floor(70 + Math.random() * 28);
+        const attendance = s.attendance !== undefined ? Number(s.attendance) : 85;
 
         const subjects = s.subjects || {
-            'Mathematics': Math.min(100, total + Math.floor(Math.random() * 10 - 5)),
-            'English': Math.min(100, Math.max(30, total + Math.floor(Math.random() * 12 - 6))),
-            'Science': Math.min(100, Math.max(30, total + Math.floor(Math.random() * 10 - 5))),
-            'Hindi': Math.min(100, Math.max(35, total + Math.floor(Math.random() * 8 - 4))),
-            'Marathi': Math.min(100, Math.max(35, total + Math.floor(Math.random() * 8 - 4)))
+            'Mathematics': total,
+            'English': total,
+            'Science': total,
+            'Hindi': total,
+            'Marathi': total
         };
 
         return {
@@ -185,7 +188,7 @@ function renderStudentTable() {
                 <td>${s['Father Name']}</td>
                 <td>
                     <span class="badge ${badge.cssClass}" style="margin-right:8px;">${badge.label}</span>
-                    <button class="btn-analytics" onclick="openStudentModal(${s['Roll No']})">View Details</button>
+                    <button type="button" class="btn-analytics" onclick="openStudentModal(${s['Roll No']})">View Details</button>
                 </td>
             </tr>
         `;
@@ -370,8 +373,8 @@ function renderIndividualStudentAnalytics(rollNo) {
     if (document.getElementById('indAttendance')) document.getElementById('indAttendance').innerText = `${student.attendance}%`;
 
     let passedCount = 0, failedCount = 0;
-    const subjectLabels = Object.keys(student.subjects);
-    const subjectMarks = Object.values(student.subjects);
+    const subjectLabels = Object.keys(student.subjects || {});
+    const subjectMarks = Object.values(student.subjects || {});
 
     subjectMarks.forEach(m => {
         if (m >= 35) passedCount++;
@@ -420,7 +423,7 @@ function openStudentModal(rollNo) {
     const tbody = document.getElementById('modalSubjectBreakdown');
     if (tbody) {
         tbody.innerHTML = '';
-        Object.entries(student.subjects).forEach(([subj, marks]) => {
+        Object.entries(student.subjects || {}).forEach(([subj, marks]) => {
             tbody.innerHTML += `
                 <tr>
                     <td>${subj}</td>
@@ -444,7 +447,9 @@ function closeAnalyticsModal() {
 // ==========================================
 // DATA SUBMISSION & PERMANENT LOCAL SAVING
 // ==========================================
-async function submitAttendance() {
+async function submitAttendance(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
     const selectedClass = document.getElementById('classSelect')?.value || "5th";
     const selectedDiv = document.getElementById('divSelect')?.value || "A";
     const attDate = document.getElementById('attDate')?.value || new Date().toISOString().split('T')[0];
@@ -455,7 +460,6 @@ async function submitAttendance() {
         const selectedRadio = document.querySelector(`input[name="att_${roll}"]:checked`);
         const status = selectedRadio ? selectedRadio.value : "Present";
         
-        // Ensure accurate tracking in local object
         if (status === "Absent") {
             s.attendance = Math.max(0, s.attendance - 2); 
         } else {
@@ -465,33 +469,31 @@ async function submitAttendance() {
         records.push({ roll_no: roll, student_name: s['Student Name'], status: status });
     });
 
-    // 1. COMMIT TO LOCAL DATABASE (Prevents Undo)
+    // Save to LocalStorage
     saveLocalState(selectedClass, selectedDiv);
 
-    // 2. Try Background Sync
+    // Optional API Sync
     try {
-        const response = await fetch(`${BACKEND_URL}/api/teacher/attendance`, {
+        await fetch(`${BACKEND_URL}/api/teacher/attendance`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ class: selectedClass, division: selectedDiv, date: attDate, records: records })
         });
-        
-        // Regardless of API success, data is already saved locally
-        alert(`Attendance recorded permanently for ${selectedClass} ${selectedDiv}!`);
     } catch (err) {
-        console.error("Attendance Sync Error:", err);
-        alert(`Attendance saved permanently to local database for ${selectedClass} ${selectedDiv}!`);
+        console.warn("API Sync skipped/failed:", err);
     }
 
-    renderAllViews();
+    alert(`Attendance saved permanently for ${selectedClass} ${selectedDiv}!`);
+    renderStudentTable();
 }
 
-async function saveMarks() {
+async function saveMarks(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
     const selectedClass = document.getElementById('classSelect')?.value || "5th";
     const selectedDiv = document.getElementById('divSelect')?.value || "A";
     const subject = document.getElementById('subjSelect')?.value || "Mathematics";
 
-    const marksData = [];
     const rows = document.querySelectorAll('#marksTableBody tr, #marksTable tr');
 
     rows.forEach(row => {
@@ -505,39 +507,36 @@ async function saveMarks() {
         const term = Number(row.querySelector('.input-term')?.value || 0);
         const total = ut1 + ut2 + assign + oral + term;
 
-        marksData.push({ roll_no: roll, ut1, ut2, assign, oral, term, total });
-
-        // Update the EXACT student object in memory
         const st = globalStudentsData.find(item => item['Roll No'] === roll);
         if (st) {
-            st.ut1 = ut1; st.ut2 = ut2; st.assign = assign;
-            st.oral = oral; st.term = term;
+            st.ut1 = ut1; 
+            st.ut2 = ut2; 
+            st.assign = assign;
+            st.oral = oral; 
+            st.term = term;
             st.total = total;
             
-            if (st.subjects) {
-                st.subjects[subject] = total;
-            }
+            if (!st.subjects) st.subjects = {};
+            st.subjects[subject] = total;
         }
     });
 
-    // 1. COMMIT TO LOCAL DATABASE (Prevents Undo)
+    // 1. Write to local database
     saveLocalState(selectedClass, selectedDiv);
 
-    // 2. Try Background Sync
+    // 2. Background API Push
     try {
-        const response = await fetch(`${BACKEND_URL}/api/teacher/marks`, {
+        await fetch(`${BACKEND_URL}/api/teacher/marks`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ class: selectedClass, division: selectedDiv, subject: subject, marks: marksData })
+            body: JSON.stringify({ class: selectedClass, division: selectedDiv, subject: subject, marks: globalStudentsData })
         });
-
-        alert(`Marks for ${subject} saved permanently to local database!`);
     } catch (err) {
-        console.error("Marks Sync Error:", err);
-        alert(`Marks for ${subject} saved permanently to local database!`);
+        console.warn("API Sync skipped/failed:", err);
     }
 
-    renderAllViews();
+    alert(`Marks for ${subject} saved successfully!`);
+    renderStudentTable();
 }
 
 // AI Assistant Widget Logic
@@ -595,8 +594,6 @@ function appendMsg(text, type) {
 }
 
 function logout() {
-    // Note: Do not clear localStorage completely here if you want to keep student data between logins.
-    // To only clear user session: localStorage.removeItem('userData');
-    localStorage.clear(); 
+    localStorage.removeItem('userData');
     window.location.href = 'index.html';
 }
