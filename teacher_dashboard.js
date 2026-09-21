@@ -72,6 +72,16 @@ async function switchDivision(divValue) {
 }
 
 async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
+    const storageKey = `studentsData_${selectedClass}_${selectedDiv}`;
+    const savedLocalData = localStorage.getItem(storageKey);
+
+    // Check localStorage first so saved changes persist across page refresh
+    if (savedLocalData) {
+        globalStudentsData = JSON.parse(savedLocalData);
+        renderAllViews();
+        return;
+    }
+
     try {
         const response = await fetch(`${BACKEND_URL}/api/teacher/students?class=${selectedClass}&div=${selectedDiv}`);
         const data = await response.json();
@@ -85,7 +95,17 @@ async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
         console.error('Error loading students from API:', error);
         loadFallbackData();
     }
+
+    // Save initial state to localStorage
+    saveLocalState(selectedClass, selectedDiv);
     renderAllViews();
+}
+
+function saveLocalState(selectedClass, selectedDiv) {
+    const cls = selectedClass || document.getElementById('classSelect')?.value || "5th";
+    const div = selectedDiv || document.getElementById('divSelect')?.value || "A";
+    const storageKey = `studentsData_${cls}_${div}`;
+    localStorage.setItem(storageKey, JSON.stringify(globalStudentsData));
 }
 
 // Ensure complete data structure for student rows, scores, attendance, and subject marks
@@ -451,7 +471,7 @@ function closeAnalyticsModal() {
     if (modal) modal.style.display = 'none';
 }
 
-// backend submission APIs
+// Backend submission APIs with local persistence
 async function submitAttendance() {
     const selectedClass = document.getElementById('classSelect')?.value || "5th";
     const selectedDiv = document.getElementById('divSelect')?.value || "A";
@@ -462,12 +482,23 @@ async function submitAttendance() {
         const roll = s['Roll No'];
         const selectedRadio = document.querySelector(`input[name="att_${roll}"]:checked`);
         const status = selectedRadio ? selectedRadio.value : "Present";
+        
+        // Update local attendance percentage dynamically
+        if (status === "Absent") {
+            s.attendance = Math.max(0, s.attendance - 1);
+        } else {
+            s.attendance = Math.min(100, s.attendance + 1);
+        }
+
         records.push({
             roll_no: roll,
             student_name: s['Student Name'],
             status: status
         });
     });
+
+    // Save updated local data so refreshes persist changes
+    saveLocalState(selectedClass, selectedDiv);
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/teacher/attendance`, {
@@ -485,12 +516,14 @@ async function submitAttendance() {
         if (response.ok && resData.success) {
             alert(`Attendance recorded successfully for ${selectedClass} ${selectedDiv} on ${attDate}!`);
         } else {
-            alert(resData.message || "Attendance saved locally!");
+            alert("Attendance saved locally!");
         }
     } catch (err) {
         console.error("Attendance Sync Error:", err);
         alert("Attendance submitted locally!");
     }
+
+    renderAllViews();
 }
 
 async function saveMarks() {
@@ -517,14 +550,20 @@ async function saveMarks() {
             total: ut1 + ut2 + assign + oral + term
         });
 
-        // Local state update
+        // Update global object state
         const st = globalStudentsData.find(item => item['Roll No'] == roll);
         if (st) {
             st.ut1 = ut1; st.ut2 = ut2; st.assign = assign;
             st.oral = oral; st.term = term;
             st.total = ut1 + ut2 + assign + oral + term;
+            if (st.subjects) {
+                st.subjects[subject] = st.total;
+            }
         }
     });
+
+    // Save modified data to browser cache
+    saveLocalState(selectedClass, selectedDiv);
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/teacher/marks`, {
@@ -546,7 +585,7 @@ async function saveMarks() {
         }
     } catch (err) {
         console.error("Marks Sync Error:", err);
-        alert("Student marks saved!");
+        alert("Student marks saved locally!");
     }
 
     renderAllViews();
