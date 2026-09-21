@@ -6,6 +6,7 @@ let globalStudentsData = [];
 // Chart Instances
 let marksChart = null;
 let subjectChart = null;
+let individualSubjectChart = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initialize Teacher Profile details from localStorage
@@ -37,38 +38,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Set select element default value if available
+    const divSelect = document.getElementById('divisionSelect');
+    if (divSelect) divSelect.value = selectedDiv;
+
     // 3. Fetch students and build UI tables
     await fetchAndDisplayStudents(selectedClass, selectedDiv);
 });
 
-async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
-    const tableBody = document.getElementById('studentTableBody');
-    if (!tableBody) return;
+// Switch division callback
+async function switchDivision(divValue) {
+    const classLabel = document.getElementById('assignedClassLabel');
+    if (classLabel) {
+        const currentClass = classLabel.innerText.split(' ')[0] || "5th";
+        classLabel.innerText = `${currentClass} ${divValue}`;
+        document.getElementById('analyticsClassLabel').innerText = `${currentClass} ${divValue}`;
+        await fetchAndDisplayStudents(currentClass, divValue);
+    }
+}
 
+async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
     try {
         const response = await fetch(`${BACKEND_URL}/api/teacher/students?class=${selectedClass}&div=${selectedDiv}`);
         const data = await response.json();
 
         if (response.ok && data.success && data.students && data.students.length > 0) {
-            globalStudentsData = data.students;
-            tableBody.innerHTML = '';
-            
-            data.students.forEach((student, index) => {
-                const row = `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${student['Roll No'] || student.roll || ''}</td>
-                        <td>${student['Student Name'] || student.name || ''}</td>
-                        <td>${student['Username'] || student.username || ''}</td>
-                        <td>${student['School ID'] || student.school_id || ''}</td>
-                        <td>${student['Father Name'] || student.father_name || ''}</td>
-                    </tr>
-                `;
-                tableBody.innerHTML += row;
-            });
-
-            // Populate Attendance and Marks tables using backend data
-            renderAttendanceAndMarksTables(data.students);
+            globalStudentsData = processStudentData(data.students);
         } else {
             loadFallbackData();
         }
@@ -76,53 +71,117 @@ async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
         console.error('Error loading students:', error);
         loadFallbackData();
     }
+    renderAllViews();
+}
+
+// Ensure mock fields (scores, attendance, subjects) are present for rich UI calculations
+function processStudentData(students) {
+    return students.map((s, idx) => {
+        const roll = s['Roll No'] || s.roll || (idx + 1);
+        const name = s['Student Name'] || s.name || `Student ${roll}`;
+        const username = s['Username'] || s.username || `user_${roll}`;
+        const school_id = s['School ID'] || s.school_id || `SCH${100 + roll}`;
+        const father_name = s['Father Name'] || s.father_name || "Parent Name";
+
+        const ut1 = s.ut1 !== undefined ? Number(s.ut1) : Math.floor(10 + Math.random() * 10);
+        const ut2 = s.ut2 !== undefined ? Number(s.ut2) : Math.floor(10 + Math.random() * 10);
+        const assign = s.assign !== undefined ? Number(s.assign) : Math.floor(5 + Math.random() * 5);
+        const oral = s.oral !== undefined ? Number(s.oral) : Math.floor(5 + Math.random() * 5);
+        const term = s.term !== undefined ? Number(s.term) : Math.floor(20 + Math.random() * 20);
+        const total = ut1 + ut2 + assign + oral + term;
+
+        const attendance = s.attendance !== undefined ? Number(s.attendance) : Math.floor(70 + Math.random() * 28);
+
+        // Subjects breakdown mock/actual generator
+        const subjects = s.subjects || {
+            'Mathematics': Math.min(100, total + Math.floor(Math.random() * 10 - 5)),
+            'English': Math.min(100, Math.max(30, total + Math.floor(Math.random() * 12 - 6))),
+            'Science': Math.min(100, Math.max(30, total + Math.floor(Math.random() * 10 - 5))),
+            'Hindi': Math.min(100, Math.max(35, total + Math.floor(Math.random() * 8 - 4))),
+            'Marathi': Math.min(100, Math.max(35, total + Math.floor(Math.random() * 8 - 4)))
+        };
+
+        return {
+            'Roll No': roll,
+            'Student Name': name,
+            'Username': username,
+            'School ID': school_id,
+            'Father Name': father_name,
+            ut1, ut2, assign, oral, term, total,
+            attendance,
+            subjects
+        };
+    });
 }
 
 // Fallback logic when backend request fails or returns empty array
 function loadFallbackData() {
-    const tableBody = document.getElementById('studentTableBody');
-    globalStudentsData = [
-        { 'Roll No': 1, 'Student Name': "Nikhil Kokate", 'Username': "nikhil123", 'School ID': "SCH484", 'Father Name': "Omkar Kokate", ut1: 18, ut2: 17, assign: 9, oral: 9, term: 35 },
-        { 'Roll No': 2, 'Student Name': "Rutuparn Shinde", 'Username': "rutuparn563", 'School ID': "SCH563", 'Father Name': "Tejas Shinde", ut1: 19, ut2: 18, assign: 10, oral: 10, term: 36 },
-        { 'Roll No': 3, 'Student Name': "Sarika Patil", 'Username': "sarika284", 'School ID': "SCH284", 'Father Name': "Ajinkya Patil", ut1: 15, ut2: 14, assign: 8, oral: 8, term: 28 },
-        { 'Roll No': 4, 'Student Name': "Rutuja Joshi", 'Username': "rutuja468", 'School ID': "SCH468", 'Father Name': "Suraj Joshi", ut1: 7, ut2: 6, assign: 4, oral: 3, term: 12 },
-        { 'Roll No': 5, 'Student Name': "Rutuparn Chougule", 'Username': "rutuparn218", 'School ID': "SCH218", 'Father Name': "Ganesh Chougule", ut1: 20, ut2: 19, assign: 10, oral: 9, term: 38 }
+    const rawFallback = [
+        { 'Roll No': 1, 'Student Name': "Nikhil Kokate", 'Username': "nikhil123", 'School ID': "SCH484", 'Father Name': "Omkar Kokate", ut1: 18, ut2: 17, assign: 9, oral: 9, term: 35, attendance: 92 },
+        { 'Roll No': 2, 'Student Name': "Rutuparn Shinde", 'Username': "rutuparn563", 'School ID': "SCH563", 'Father Name': "Tejas Shinde", ut1: 19, ut2: 18, assign: 10, oral: 10, term: 36, attendance: 96 },
+        { 'Roll No': 3, 'Student Name': "Sarika Patil", 'Username': "sarika284", 'School ID': "SCH284", 'Father Name': "Ajinkya Patil", ut1: 15, ut2: 14, assign: 8, oral: 8, term: 28, attendance: 81 },
+        { 'Roll No': 4, 'Student Name': "Rutuja Joshi", 'Username': "rutuja468", 'School ID': "SCH468", 'Father Name': "Suraj Joshi", ut1: 7, ut2: 6, assign: 4, oral: 3, term: 12, attendance: 64 },
+        { 'Roll No': 5, 'Student Name': "Rutuparn Chougule", 'Username': "rutuparn218", 'School ID': "SCH218", 'Father Name': "Ganesh Chougule", ut1: 20, ut2: 19, assign: 10, oral: 9, term: 38, attendance: 98 }
     ];
+    globalStudentsData = processStudentData(rawFallback);
+}
 
-    if (tableBody) {
-        tableBody.innerHTML = '';
-        globalStudentsData.forEach((s, index) => {
-            tableBody.innerHTML += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${s['Roll No']}</td>
-                    <td>${s['Student Name']}</td>
-                    <td>${s['Username']}</td>
-                    <td>${s['School ID']}</td>
-                    <td>${s['Father Name']}</td>
-                </tr>`;
-        });
+function renderAllViews() {
+    renderStudentTable();
+    renderAttendanceAndMarksTables();
+    populateAnalyticsDropdown();
+}
+
+function renderStudentTable() {
+    const tableBody = document.getElementById('studentTableBody');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = '';
+    globalStudentsData.forEach((s, index) => {
+        const badge = getPerformanceBadge(s.total, s.attendance);
+        const row = `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${s['Roll No']}</td>
+                <td>${s['Student Name']}</td>
+                <td>${s['School ID']}</td>
+                <td>${s['Father Name']}</td>
+                <td>
+                    <span class="badge ${badge.cssClass}" style="margin-right:8px;">${badge.label}</span>
+                    <button class="btn-analytics" onclick="openStudentModal(${s['Roll No']})">View Details</button>
+                </td>
+            </tr>
+        `;
+        tableBody.innerHTML += row;
+    });
+}
+
+function getPerformanceBadge(totalScore, attendance) {
+    if (totalScore >= 75 && attendance >= 85) {
+        return { label: 'Good', cssClass: 'badge-green' };
+    } else if (totalScore >= 35 && attendance >= 70) {
+        return { label: 'Average', cssClass: 'badge-yellow' };
+    } else {
+        return { label: 'At-Risk', cssClass: 'badge-red' };
     }
-
-    renderAttendanceAndMarksTables(globalStudentsData);
 }
 
 // Helper function to sync dynamically fetched data across Attendance and Marks tables
-function renderAttendanceAndMarksTables(students) {
+function renderAttendanceAndMarksTables() {
     const attTable = document.getElementById('attendanceTable');
     const marksTable = document.getElementById('marksTable');
 
     if (attTable) {
         let attHtml = '';
-        students.forEach(s => {
-            const roll = s['Roll No'] || s.roll || '';
-            const name = s['Student Name'] || s.name || '';
+        globalStudentsData.forEach(s => {
+            const roll = s['Roll No'];
+            const name = s['Student Name'];
             attHtml += `
                 <tr>
                     <td>${roll}</td>
                     <td>${name}</td>
-                    <td><input type="radio" name="att_${roll}" value="Present" class="att-radio" checked></td>
-                    <td><input type="radio" name="att_${roll}" value="Absent" class="att-radio"></td>
+                    <td><input type="radio" name="att_${roll}" value="Present" class="att-radio" ${s.attendance >= 75 ? 'checked' : ''}></td>
+                    <td><input type="radio" name="att_${roll}" value="Absent" class="att-radio" ${s.attendance < 75 ? 'checked' : ''}></td>
                 </tr>`;
         });
         attTable.innerHTML = attHtml;
@@ -130,21 +189,52 @@ function renderAttendanceAndMarksTables(students) {
 
     if (marksTable) {
         let marksHtml = '';
-        students.forEach(s => {
-            const roll = s['Roll No'] || s.roll || '';
-            const name = s['Student Name'] || s.name || '';
+        globalStudentsData.forEach(s => {
+            const roll = s['Roll No'];
+            const name = s['Student Name'];
             marksHtml += `
                 <tr>
                     <td>${roll}</td>
                     <td>${name}</td>
-                    <td><input type="number" class="mark-input" value="${s.ut1 !== undefined ? s.ut1 : 15}" max="20"></td>
-                    <td><input type="number" class="mark-input" value="${s.ut2 !== undefined ? s.ut2 : 15}" max="20"></td>
-                    <td><input type="number" class="mark-input" value="${s.assign !== undefined ? s.assign : 8}" max="10"></td>
-                    <td><input type="number" class="mark-input" value="${s.oral !== undefined ? s.oral : 8}" max="10"></td>
-                    <td><input type="number" class="mark-input" value="${s.term !== undefined ? s.term : 30}" max="40"></td>
+                    <td><input type="number" class="mark-input" value="${s.ut1}" max="20"></td>
+                    <td><input type="number" class="mark-input" value="${s.ut2}" max="20"></td>
+                    <td><input type="number" class="mark-input" value="${s.assign}" max="10"></td>
+                    <td><input type="number" class="mark-input" value="${s.oral}" max="10"></td>
+                    <td><input type="number" class="mark-input" value="${s.term}" max="40"></td>
                 </tr>`;
         });
         marksTable.innerHTML = marksHtml;
+    }
+}
+
+// Populate Filter Dropdown in Analytics Tab
+function populateAnalyticsDropdown() {
+    const dropdown = document.getElementById('studentSelectFilter');
+    if (!dropdown) return;
+
+    dropdown.innerHTML = '<option value="ALL">Whole Class Overview</option>';
+    globalStudentsData.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s['Roll No'];
+        opt.textContent = `Roll No ${s['Roll No']} - ${s['Student Name']}`;
+        dropdown.appendChild(opt);
+    });
+}
+
+// Analytics View Switcher Handler
+function handleAnalyticsViewChange() {
+    const selectedVal = document.getElementById('studentSelectFilter').value;
+    const classContainer = document.getElementById('classAnalyticsContainer');
+    const indContainer = document.getElementById('individualAnalyticsContainer');
+
+    if (selectedVal === 'ALL') {
+        classContainer.style.display = 'block';
+        indContainer.style.display = 'none';
+        renderClassAnalyticsCharts();
+    } else {
+        classContainer.style.display = 'none';
+        indContainer.style.display = 'block';
+        renderIndividualStudentAnalytics(Number(selectedVal));
     }
 }
 
@@ -159,12 +249,16 @@ function showSection(id, btn) {
 
     // Trigger Analytics Chart Rendering when switching to analytics tab
     if (id === 'analyticsSec') {
-        renderAnalyticsCharts();
+        handleAnalyticsViewChange();
     }
 }
 
-// Analytics Rendering Logic
+// Analytics Rendering Logic - Whole Class
 function renderAnalyticsCharts() {
+    handleAnalyticsViewChange();
+}
+
+function renderClassAnalyticsCharts() {
     if (!globalStudentsData || globalStudentsData.length === 0) return;
 
     let distinction = 0, firstClass = 0, passClass = 0, failClass = 0;
@@ -173,18 +267,12 @@ function renderAnalyticsCharts() {
     let topperName = "-";
 
     globalStudentsData.forEach(s => {
-        const ut1 = Number(s.ut1 || 0);
-        const ut2 = Number(s.ut2 || 0);
-        const assign = Number(s.assign || 0);
-        const oral = Number(s.oral || 0);
-        const term = Number(s.term || 0);
-        const total = s.total !== undefined ? Number(s.total) : (ut1 + ut2 + assign + oral + term);
-
+        const total = s.total;
         totalScoreSum += total;
 
         if (total > highestScore) {
             highestScore = total;
-            topperName = `${s['Student Name'] || s.name} (${total})`;
+            topperName = `${s['Student Name']} (${total})`;
         }
 
         if (total >= 75) distinction++;
@@ -248,6 +336,107 @@ function renderAnalyticsCharts() {
     }
 }
 
+// Render Individual Student Analytics in Analytics Tab
+function renderIndividualStudentAnalytics(rollNo) {
+    const student = globalStudentsData.find(s => s['Roll No'] === rollNo);
+    if (!student) return;
+
+    document.getElementById('indStudentName').innerText = student['Student Name'];
+    document.getElementById('indStudentRoll').innerText = student['Roll No'];
+    
+    const badgeInfo = getPerformanceBadge(student.total, student.attendance);
+    const badgeEl = document.getElementById('indPerformanceBadge');
+    badgeEl.className = `badge ${badgeInfo.cssClass}`;
+    badgeEl.innerText = badgeInfo.label;
+
+    document.getElementById('indTotalScore').innerText = `${student.total} / 100`;
+    document.getElementById('indAttendance').innerText = `${student.attendance}%`;
+
+    // Calculate Subject Pass/Fail
+    let passedCount = 0;
+    let failedCount = 0;
+    const subjectLabels = Object.keys(student.subjects);
+    const subjectMarks = Object.values(student.subjects);
+
+    subjectMarks.forEach(m => {
+        if (m >= 35) passedCount++;
+        else failedCount++;
+    });
+
+    document.getElementById('indPassedSubjects').innerText = `${passedCount} Subjects`;
+    document.getElementById('indFailedSubjects').innerText = `${failedCount} Subjects`;
+
+    // Render Individual Subject Bar Chart
+    const indCtx = document.getElementById('individualSubjectChart');
+    if (indCtx && typeof Chart !== 'undefined') {
+        if (individualSubjectChart) individualSubjectChart.destroy();
+        individualSubjectChart = new Chart(indCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: subjectLabels,
+                datasets: [{
+                    label: 'Marks Obtained',
+                    data: subjectMarks,
+                    backgroundColor: subjectMarks.map(m => m >= 35 ? '#0055a5' : '#dc3545')
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, max: 100 }
+                }
+            }
+        });
+    }
+}
+
+// Modal Handlers
+function openStudentModal(rollNo) {
+    const student = globalStudentsData.find(s => s['Roll No'] === rollNo);
+    if (!student) return;
+
+    document.getElementById('modalStudentName').innerText = student['Student Name'];
+    document.getElementById('modalStudentRoll').innerText = `${student['Roll No']} (${student['School ID']})`;
+    document.getElementById('modalAttendance').innerText = `${student.attendance}%`;
+    document.getElementById('modalTotalScore').innerText = `${student.total}%`;
+
+    let grade = 'F';
+    let status = 'FAILED';
+    let statusColor = '#dc3545';
+
+    if (student.total >= 75) { grade = 'A+'; status = 'PASSED'; statusColor = '#28a745'; }
+    else if (student.total >= 60) { grade = 'A'; status = 'PASSED'; statusColor = '#28a745'; }
+    else if (student.total >= 35) { grade = 'B'; status = 'PASSED'; statusColor = '#28a745'; }
+
+    document.getElementById('modalGrade').innerText = grade;
+    const statusEl = document.getElementById('modalStatus');
+    statusEl.innerText = status;
+    statusEl.style.color = statusColor;
+
+    // Populate Subject Breakdown Table
+    const tbody = document.getElementById('modalSubjectBreakdown');
+    if (tbody) {
+        tbody.innerHTML = '';
+        Object.entries(student.subjects).forEach(([subj, marks]) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${subj}</td>
+                    <td>100</td>
+                    <td>${marks}</td>
+                    <td style="font-weight:bold; color:${marks >= 35 ? '#006633' : '#dc3545'}">${marks}%</td>
+                </tr>
+            `;
+        });
+    }
+
+    document.getElementById('studentAnalyticsModal').style.display = 'flex';
+}
+
+function closeAnalyticsModal() {
+    const modal = document.getElementById('studentAnalyticsModal');
+    if (modal) modal.style.display = 'none';
+}
+
 // Form Handlers
 function saveAttendance() {
     alert("Attendance recorded successfully!");
@@ -277,15 +466,8 @@ function sendChat() {
     const q = msg.toLowerCase();
 
     // Dynamically calculate statistics from current global state
-    const studentStats = globalStudentsData.map(s => {
-        const ut1 = Number(s.ut1 || 0);
-        const ut2 = Number(s.ut2 || 0);
-        const assign = Number(s.assign || 0);
-        const oral = Number(s.oral || 0);
-        const term = Number(s.term || 0);
-        const total = s.total !== undefined ? Number(s.total) : (ut1 + ut2 + assign + oral + term);
-        return { name: s['Student Name'] || s.name, total };
-    }).sort((a, b) => b.total - a.total);
+    const studentStats = globalStudentsData.map(s => ({ name: s['Student Name'], total: s.total }))
+        .sort((a, b) => b.total - a.total);
 
     if (q.includes("attendance") || q.includes("how to mark")) {
         response = "To mark attendance, select 'Mark Attendance' from the sidebar, mark Present or Absent for each student, and click 'Submit Attendance'.";
