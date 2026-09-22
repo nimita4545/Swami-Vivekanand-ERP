@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="pageTitle">प्रशासन पॅनेल - स्वामी विवेकानंद शाळा ERP</title>
+    <title>Admin Dashboard - Swami Vivekanand School ERP</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f8fb; color: #0d253f; display: flex; min-height: 100vh; }
         
-        /* Sidebar Navigation */
+        /* Sidebar Navigation - Navy & White */
         .sidebar { width: 260px; background: #003366; color: #ffffff; padding: 20px 0; display: flex; flex-direction: column; border-right: 2px solid #002244; }
         .sidebar h2 { text-align: center; font-size: 1.1rem; margin-bottom: 15px; padding: 0 15px 15px 15px; border-bottom: 1px solid #1a4d80; }
         
-        /* Language Switcher Dropdown Container */
-        .lang-container { padding: 0 15px 15px 15px; text-align: center; border-bottom: 1px solid #1a4d80; margin-bottom: 15px; }
+        /* Language Selector Styling */
+        .lang-container { padding: 0 20px 15px 20px; border-bottom: 1px solid #1a4d80; margin-bottom: 15px; }
         .lang-container label { font-size: 0.8rem; color: #d9e6f2; display: block; margin-bottom: 5px; }
-        .lang-select { width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #1a4d80; background: #002244; color: #ffffff; font-weight: bold; outline: none; cursor: pointer; }
+        .lang-select { width: 100%; padding: 6px 10px; border-radius: 4px; border: 1px solid #1a4d80; background: #002244; color: #ffffff; font-weight: bold; cursor: pointer; outline: none; }
 
         .nav-item { padding: 12px 20px; color: #d9e6f2; text-decoration: none; display: block; cursor: pointer; transition: 0.2s; font-weight: 500; }
         .nav-item:hover, .nav-item.active { background: #0055a5; color: #ffffff; font-weight: bold; border-left: 5px solid #ffffff; }
@@ -68,23 +68,23 @@
 
     <!-- Sidebar Navigation -->
     <div class="sidebar">
-        <h2>स्वामी विवेकानंद ERP</h2>
+        <h2> स्वामी विवेकानंद ERP</h2>
         
-        <!-- Language Selector Switcher -->
+        <!-- Language Switcher -->
         <div class="lang-container">
-            <label data-i18n="selectLanguage">भाषा निवडा / Select Language</label>
-            <select class="lang-select" id="langSelect" onchange="changeLanguage(this.value)">
+            <label id="lblLangSelect">भाषा निवडा / Language:</label>
+            <select class="lang-select" id="languageSelect" onchange="switchLanguage(this.value)">
                 <option value="mr" selected>मराठी (Marathi)</option>
                 <option value="en">English</option>
             </select>
         </div>
 
-        <a class="nav-item active" onclick="showSection('overviewSec', this)" data-i18n="navOverview">प्रशासकीय आढावा</a>
-        <a class="nav-item" onclick="showSection('studentsSec', this)" data-i18n="navStudents">विद्यार्थी व्यवस्थापन</a>
-        <a class="nav-item" onclick="showSection('teachersSec', this)" data-i18n="navTeachers">शिक्षक व्यवस्थापन</a>
-        <a class="nav-item" onclick="showSection('announcementsSec', this)" data-i18n="navNotice">शाळा सूचना फलक</a>
-        <a class="nav-item" onclick="showSection('holidaySec', this)" data-i18n="navHolidays">शालेय सुट्ट्या</a>
-        <button class="logout-btn" onclick="logout()" data-i18n="logoutBtn">लॉगआउट</button>
+        <a class="nav-item active" id="navOverview" onclick="showSection('overviewSec', this)">मुख्य माहिती (Overview)</a>
+        <a class="nav-item" id="navStudents" onclick="showSection('studentsSec', this)">विद्यार्थी व्यवस्थापन</a>
+        <a class="nav-item" id="navTeachers" onclick="showSection('teachersSec', this)">शिक्षक व्यवस्थापन</a>
+        <a class="nav-item" id="navAnnouncements" onclick="showSection('announcementsSec', this)">सूचना फलक (Notice)</a>
+        <a class="nav-item" id="navHolidays" onclick="showSection('holidaySec', this)">शाळेच्या सुट्ट्या</a>
+        <button class="logout-btn" id="btnLogout" onclick="logout()">लॉगआउट (Logout)</button>
     </div>
 
     <!-- Main Content Area -->
@@ -92,115 +92,115 @@
 
         <!-- 1. Admin Overview Section -->
         <div id="overviewSec" class="section active">
-            <h3 data-i18n="overviewTitle">प्रशासक डैशबोर्ड प्रोफाइल</h3>
+            <h3 id="hdrOverview">ॲडमिन प्रोफाइल माहिती</h3>
             <div class="card-grid">
-                <div class="card"><label data-i18n="admNameLbl">प्रशासकाचे नाव</label><p id="admName" data-i18n="admNameVal">प्रशासक कर्मचारी</p></div>
-                <div class="card"><label data-i18n="admRoleLbl">पदनाम</label><p id="admRole" data-i18n="admRoleVal">सिस्टम प्रशासक</p></div>
-                <div class="card"><label data-i18n="totalStuLbl">एकूण नोंदणीकृत विद्यार्थी</label><p id="totalStudents"><span id="totalStudentCount">0</span></p></div>
-                <div class="card"><label data-i18n="totalTchLbl">एकूण शिक्षक वर्ग</label><p id="totalTeachers"><span id="totalTeacherCount">0</span></p></div>
+                <div class="card"><label id="lblAdmName">ॲडमिनचे नाव</label><p id="admName">Admin Staff</p></div>
+                <div class="card"><label id="lblAdmRole">पद / काम</label><p id="admRole">सिस्टम ॲडमिनिस्ट्रेटर</p></div>
+                <div class="card"><label id="lblTotalStudents">एकूण विद्यार्थी</label><p id="totalStudents"><span id="totalStudentCount">0</span></p></div>
+                <div class="card"><label id="lblTotalTeachers">एकूण शिक्षक</label><p id="totalTeachers"><span id="totalTeacherCount">0</span></p></div>
             </div>
         </div>
 
         <!-- 2. Manage Students Section -->
         <div id="studentsSec" class="section">
-            <h3 data-i18n="studentsTitle">विद्यार्थी निर्देशिका आणि नोंदणी</h3>
+            <h3 id="hdrStudents">विद्यार्थी यादी व नोंदणी</h3>
             
             <!-- Registration Form -->
             <div style="background: #f0f6fb; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #c8d6e5;">
-                <h4 style="color: #003366; margin-bottom: 10px;" data-i18n="addStuHeader">नवीन विद्यार्थी जोडा</h4>
+                <h4 id="hdrAddStudent" style="color: #003366; margin-bottom: 10px;">नवीन विद्यार्थ्याची नोंदणी करा</h4>
                 <div class="form-grid">
-                    <div class="form-group"><label data-i18n="stuNameLbl">विद्यार्थ्याचे नाव</label><input type="text" id="stuName" data-i18n-ph="stuNamePh" placeholder="पूर्ण नाव"></div>
-                    <div class="form-group"><label data-i18n="stuClassLbl">इयत्ता आणि तुकडी</label><input type="text" id="stuClass" data-i18n-ph="stuClassPh" placeholder="उदा. ५ वी अ"></div>
-                    <div class="form-group"><label data-i18n="stuRollLbl">हजेरी क्रमांक (रोल नं)</label><input type="text" id="stuRoll" data-i18n-ph="stuRollPh" placeholder="उदा. १०१"></div>
-                    <div class="form-group"><label data-i18n="stuIdLbl">शाळा आयडी / पासवर्ड</label><input type="text" id="stuId" data-i18n-ph="stuIdPh" placeholder="उदा. SCH101"></div>
+                    <div class="form-group"><label id="lblStuName">विद्यार्थ्याचे नाव</label><input type="text" id="stuName" placeholder="पूर्ण नाव"></div>
+                    <div class="form-group"><label id="lblStuClass">इयत्ता व तुकडी</label><input type="text" id="stuClass" placeholder="उदा. ५ वी अ"></div>
+                    <div class="form-group"><label id="lblStuRoll">हजेरी क्रमांक (Roll No)</label><input type="text" id="stuRoll" placeholder="उदा. १०१"></div>
+                    <div class="form-group"><label id="lblStuId">स्कूल आयडी / पासवर्ड</label><input type="text" id="stuId" placeholder="उदा. SCH101"></div>
                 </div>
-                <button class="btn" onclick="addStudent()" data-i18n="regStuBtn">विद्यार्थ्याची नोंदणी करा</button>
+                <button class="btn" id="btnAddStudent" onclick="addStudent()">विद्यार्थी जतन करा</button>
             </div>
 
             <!-- Directory Table -->
             <table>
                 <thead>
                     <tr>
-                        <th data-i18n="thRoll">रोल नं</th>
-                        <th data-i18n="thStuName">विद्यार्थ्याचे नाव</th>
-                        <th data-i18n="thClass">इयत्ता व तुकडी</th>
-                        <th data-i18n="thParent">पालकांचे नाव / माहिती</th>
-                        <th data-i18n="thIdAction">शाळा आयडी / कारवाई</th>
+                        <th id="thStuRoll">रोल नंबर</th>
+                        <th id="thStuName">विद्यार्थ्याचे नाव</th>
+                        <th id="thStuClass">इयत्ता व तुकडी</th>
+                        <th id="thStuFather">पालकांचे नाव</th>
+                        <th id="thStuAction">आयडी / कारवाई</th>
                     </tr>
                 </thead>
                 <tbody id="adminStudentTableBody">
-                    <!-- Populated dynamically by admin_dashboard.js -->
+                    <!-- Populated dynamically -->
                 </tbody>
             </table>
         </div>
 
         <!-- 3. Manage Teachers Section -->
         <div id="teachersSec" class="section">
-            <h3 data-i18n="teachersTitle">शिक्षक व्यवस्थापन</h3>
+            <h3 id="hdrTeachers">शिक्षक व्यवस्थापन</h3>
             
             <!-- Add Teacher Form -->
             <div style="background: #f0f6fb; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #c8d6e5;">
-                <h4 style="color: #003366; margin-bottom: 10px;" data-i18n="addTchHeader">नवीन शिक्षकाची नियुक्ती करा</h4>
+                <h4 id="hdrAddTeacher" style="color: #003366; margin-bottom: 10px;">नवीन शिक्षकांची नोंदणी करा</h4>
                 <div class="form-grid">
-                    <div class="form-group"><label data-i18n="tchNameLbl">शिक्षकाचे नाव</label><input type="text" id="tchNameInput" data-i18n-ph="tchNamePh" placeholder="शिक्षकाचे पूर्ण नाव"></div>
-                    <div class="form-group"><label data-i18n="tchClassLbl">नियुक्त इयत्ता</label><input type="text" id="tchClassInput" data-i18n-ph="tchClassPh" placeholder="उदा. ५ वी अ"></div>
-                    <div class="form-group"><label data-i18n="tchEduLbl">शैक्षणिक पात्रता</label><input type="text" id="tchEduInput" data-i18n-ph="tchEduPh" placeholder="उदा. एम.एससी. बी.एड"></div>
-                    <div class="form-group"><label data-i18n="tchUserLbl">युझरनेम</label><input type="text" id="tchUserInput" data-i18n-ph="tchUserPh" placeholder="उदा. teacher123"></div>
+                    <div class="form-group"><label id="lblTchName">शिक्षकांचे नाव</label><input type="text" id="tchNameInput" placeholder="शिक्षकांचे पूर्ण नाव"></div>
+                    <div class="form-group"><label id="lblTchClass">दिलेली इयत्ता</label><input type="text" id="tchClassInput" placeholder="उदा. ५ वी अ"></div>
+                    <div class="form-group"><label id="lblTchEdu">शिक्षण / पात्रता</label><input type="text" id="tchEduInput" placeholder="उदा. एम.एससी. बी.एड"></div>
+                    <div class="form-group"><label id="lblTchUser">युझरनेम</label><input type="text" id="tchUserInput" placeholder="उदा. teacher123"></div>
                 </div>
-                <button class="btn" onclick="addTeacher()" data-i18n="addTchBtn">शिक्षक जोडा</button>
+                <button class="btn" id="btnAddTeacher" onclick="addTeacher()">शिक्षक जतन करा</button>
             </div>
 
             <!-- Teacher Directory Table -->
             <table>
                 <thead>
                     <tr>
-                        <th data-i18n="thSr">क्र.</th>
-                        <th data-i18n="thTchName">शिक्षकाचे नाव</th>
-                        <th data-i18n="thClassAssigned">नियुक्त वर्ग</th>
-                        <th data-i18n="thEdu">शिक्षण</th>
-                        <th data-i18n="thUserAction">युझरनेम / कारवाई</th>
+                        <th id="thTchSr">क्र.</th>
+                        <th id="thTchName">शिक्षकांचे नाव</th>
+                        <th id="thTchClass">दिलेली इयत्ता</th>
+                        <th id="thTchEdu">शिक्षण</th>
+                        <th id="thTchRole">पद</th>
                     </tr>
                 </thead>
                 <tbody id="adminTeacherTableBody">
-                    <!-- Populated dynamically by admin_dashboard.js -->
+                    <!-- Populated dynamically -->
                 </tbody>
             </table>
         </div>
 
         <!-- 4. Notice Board / Announcements -->
         <div id="announcementsSec" class="section">
-            <h3 data-i18n="noticeTitle">शाळा सूचना फलक</h3>
+            <h3 id="hdrAnnouncements">शाळेचा सूचना फलक</h3>
             <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-                <input type="text" id="noticeInput" data-i18n-ph="noticePh" placeholder="शाळेची नवीन सूचना येथे टाईप करा..." style="flex: 1; padding: 10px; border: 1px solid #0055a5; border-radius: 4px;">
-                <button class="btn" onclick="postNotice()" data-i18n="postNoticeBtn">सूचना प्रसिद्ध करा</button>
+                <input type="text" id="noticeInput" placeholder="येथे नवीन सूचना टाईप करा..." style="flex: 1; padding: 10px; border: 1px solid #0055a5; border-radius: 4px;">
+                <button class="btn" id="btnPostNotice" onclick="postNotice()">सूचना प्रसिद्ध करा</button>
             </div>
             <ul id="noticeList" style="list-style-type: none;">
                 <li style="background: #f4f8fb; padding: 12px; border-left: 4px solid #0055a5; margin-bottom: 10px; border-radius: 4px;">
-                    <strong>[२०२६-०८-२०]:</strong> <span data-i18n="notice1">इयत्ता ५ वी ते १० वी साठी सत्र परीक्षेचे वेळापत्रक अपलोड करण्यात आले आहे.</span>
+                    <strong>[२०२६-०८-२०]:</strong> इयत्ता ५ वी ते १० वी च्या सहामाही परीक्षांचे वेळापत्रक जाहीर झाले आहे.
                 </li>
                 <li style="background: #f4f8fb; padding: 12px; border-left: 4px solid #0055a5; margin-bottom: 10px; border-radius: 4px;">
-                    <strong>[२०२६-०८-१५]:</strong> <span data-i18n="notice2">स्वातंत्र्यदिन सोहळा सकाळी ७:३० वाजता शाळेच्या मुख्य मैदानावर सुरू होईल.</span>
+                    <strong>[२०२६-०८-१५]:</strong> स्वातंत्र्यदिन सोहळा सकाळी ७:३० वाजता शाळेच्या मैदानावर सुरू होईल.
                 </li>
             </ul>
         </div>
 
         <!-- 5. Holiday Section -->
         <div id="holidaySec" class="section">
-            <h3 data-i18n="holidayTitle">शैक्षणिक वर्षातील सुट्ट्या</h3>
+            <h3 id="hdrHolidays">शाळेच्या सुट्ट्यांची यादी</h3>
             <table>
                 <thead>
                     <tr>
-                        <th data-i18n="thDate">दिनांक</th>
-                        <th data-i18n="thOccasion">निमित्त / सण</th>
-                        <th data-i18n="thDay">वार</th>
+                        <th id="thHolDate">दिनांक</th>
+                        <th id="thHolOccasion">निमित्त / सण</th>
+                        <th id="thHolDay">वार</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td>2026-08-27</td><td data-i18n="hol1">गणेश चतुर्थी</td><td data-i18n="dayThu">गुरुवार</td></tr>
-                    <tr><td>2026-10-02</td><td data-i18n="hol2">महात्मा गांधी जयंती</td><td data-i18n="dayFri">शुक्रवार</td></tr>
-                    <tr><td>2026-11-08</td><td data-i18n="hol3">दिवाळी सण</td><td data-i18n="daySun">रविवार</td></tr>
-                    <tr><td>2026-12-25</td><td data-i18n="hol4">नाताळ (ख्रिसमस)</td><td data-i18n="dayFri">शुक्रवार</td></tr>
-                    <tr><td>2026-01-26</td><td data-i18n="hol5">प्रजासत्ताक दिन</td><td data-i18n="dayMon">सोमवार</td></tr>
+                    <tr><td>२७-०८-२०२६</td><td>गणेश चतुर्थी</td><td>गुरुवार</td></tr>
+                    <tr><td>०२-१०-२०२६</td><td>महात्मा गांधी जयंती</td><td>शुक्रवार</td></tr>
+                    <tr><td>०८-११-२०२६</td><td>दिवाळी सण</td><td>रविवार</td></tr>
+                    <tr><td>२५-१२-२०२६</td><td>नाताळ (ख्रिसमस)</td><td>शुक्रवार</td></tr>
+                    <tr><td>२६-०१-२०२७</td><td>प्रजासत्ताक दिन</td><td>सोमवार</td></tr>
                 </tbody>
             </table>
         </div>
@@ -208,22 +208,178 @@
     </div>
 
     <!-- 6. AI Admin Assistant Chatbot Widget -->
-    <button class="chatbot-btn" onclick="toggleChat()" data-i18n="chatbotBtn">💬 AI सहाय्यक</button>
+    <button class="chatbot-btn" id="btnChatbot" onclick="toggleChat()">💬 एआय मदतनीस</button>
     <div class="chat-window" id="chatWindow">
         <div class="chat-header">
-            <span data-i18n="chatHeader">AI प्रशासकीय सहाय्यक</span>
+            <span id="hdrChatbot">एआय ॲडमिन मदतनीस</span>
             <button onclick="toggleChat()" style="background:none; border:none; color:#ffffff; font-weight:bold; cursor:pointer;">✕</button>
         </div>
         <div class="chat-body" id="chatBody">
-            <div class="chat-msg bot" id="botWelcomeMsg" data-i18n="chatWelcome">नमस्कार प्रशासक! आपण मला एकूण प्रवेश, शिक्षक वाटप किंवा सिस्टीमच्या माहितीबद्दल विचारू शकता.</div>
+            <div class="chat-msg bot" id="chatWelcome">नमस्कार! मी आपला शाळा एआय मदतनीस आहे. आपण मला प्रवेश, शिक्षक किंवा इतर माहिती विचारू शकता.</div>
         </div>
         <div class="chat-footer">
-            <input type="text" id="chatInput" data-i18n-ph="chatPh" placeholder="प्रश्न विचारा..." onkeypress="if(event.key==='Enter') sendChat()">
-            <button class="btn" onclick="sendChat()" data-i18n="sendBtn">पाठवा</button>
+            <input type="text" id="chatInput" placeholder="प्रश्न विचारा..." onkeypress="if(event.key==='Enter') sendChat()">
+            <button class="btn" id="btnSendChat" onclick="sendChat()">पाठवा</button>
         </div>
     </div>
 
-    <!-- Admin Dashboard Data & Translation Handler -->
+    <!-- Inline Translation Script -->
+    <script>
+        const translations = {
+            mr: {
+                navOverview: "मुख्य माहिती (Overview)",
+                navStudents: "विद्यार्थी व्यवस्थापन",
+                navTeachers: "शिक्षक व्यवस्थापन",
+                navAnnouncements: "सूचना फलक (Notice)",
+                navHolidays: "शाळेच्या सुट्ट्या",
+                btnLogout: "लॉगआउट (Logout)",
+                
+                hdrOverview: "ॲडमिन प्रोफाइल माहिती",
+                lblAdmName: "ॲडमिनचे नाव",
+                lblAdmRole: "पद / काम",
+                lblTotalStudents: "एकूण विद्यार्थी",
+                lblTotalTeachers: "एकूण शिक्षक",
+
+                hdrStudents: "विद्यार्थी यादी व नोंदणी",
+                hdrAddStudent: "नवीन विद्यार्थ्याची नोंदणी करा",
+                lblStuName: "विद्यार्थ्याचे नाव",
+                lblStuClass: "इयत्ता व तुकडी",
+                lblStuRoll: "हजेरी क्रमांक (Roll No)",
+                lblStuId: "स्कूल आयडी / पासवर्ड",
+                btnAddStudent: "विद्यार्थी जतन करा",
+                thStuRoll: "रोल नंबर",
+                thStuName: "विद्यार्थ्याचे नाव",
+                thStuClass: "इयत्ता व तुकडी",
+                thStuFather: "पालकांचे नाव",
+                thStuAction: "आयडी / कारवाई",
+
+                hdrTeachers: "शिक्षक व्यवस्थापन",
+                hdrAddTeacher: "नवीन शिक्षकांची नोंदणी करा",
+                lblTchName: "शिक्षकांचे नाव",
+                lblTchClass: "दिलेली इयत्ता",
+                lblTchEdu: "शिक्षण / पात्रता",
+                lblTchUser: "युझरनेम",
+                btnAddTeacher: "शिक्षक जतन करा",
+                thTchSr: "क्र.",
+                thTchName: "शिक्षकांचे नाव",
+                thTchClass: "दिलेली इयत्ता",
+                thTchEdu: "शिक्षण",
+                thTchRole: "पद",
+
+                hdrAnnouncements: "शाळेचा सूचना फलक",
+                noticeInputPlaceholder: "येथे नवीन सूचना टाईप करा...",
+                btnPostNotice: "सूचना प्रसिद्ध करा",
+
+                hdrHolidays: "शाळेच्या सुट्ट्यांची यादी",
+                thHolDate: "दिनांक",
+                thHolOccasion: "निमित्त / सण",
+                thHolDay: "वार",
+
+                btnChatbot: "💬 एआय मदतनीस",
+                hdrChatbot: "एआय ॲडमिन मदतनीस",
+                chatWelcome: "नमस्कार! मी आपला शाळा एआय मदतनीस आहे. आपण मला प्रवेश, शिक्षक किंवा इतर माहिती विचारू शकता.",
+                chatInputPlaceholder: "प्रश्न विचारा...",
+                btnSendChat: "पाठवा"
+            },
+            en: {
+                navOverview: "Admin Overview",
+                navStudents: "Manage Students",
+                navTeachers: "Manage Teachers",
+                navAnnouncements: "School Notice Board",
+                navHolidays: "School Holidays",
+                btnLogout: "Logout",
+
+                hdrOverview: "Administrator Dashboard Profile",
+                lblAdmName: "Admin Name",
+                lblAdmRole: "Designation",
+                lblTotalStudents: "Total Enrolled Students",
+                lblTotalTeachers: "Total Teaching Staff",
+
+                hdrStudents: "Student Directory & Registration",
+                hdrAddStudent: "Add New Student",
+                lblStuName: "Student Name",
+                lblStuClass: "Class & Division",
+                lblStuRoll: "Roll Number",
+                lblStuId: "School ID / Password",
+                btnAddStudent: "Register Student",
+                thStuRoll: "Roll No",
+                thStuName: "Student Name",
+                thStuClass: "Class & Div",
+                thStuFather: "Father Name / Info",
+                thStuAction: "School ID / Action",
+
+                hdrTeachers: "Faculty Management",
+                hdrAddTeacher: "Assign New Faculty Member",
+                lblTchName: "Teacher Name",
+                lblTchClass: "Assigned Class",
+                lblTchEdu: "Qualifications",
+                lblTchUser: "Username",
+                btnAddTeacher: "Add Faculty Member",
+                thTchSr: "#",
+                thTchName: "Teacher Name",
+                thTchClass: "Class Assigned",
+                thTchEdu: "Education",
+                thTchRole: "Role",
+
+                hdrAnnouncements: "School Notice Board",
+                noticeInputPlaceholder: "Type school announcement or notice...",
+                btnPostNotice: "Publish Notice",
+
+                hdrHolidays: "Academic School Holidays",
+                thHolDate: "Date",
+                thHolOccasion: "Occasion",
+                thHolDay: "Day",
+
+                btnChatbot: "💬 Admin Assistant",
+                hdrChatbot: "AI Admin Assistant",
+                chatWelcome: "Welcome Administrator! You can ask me queries regarding total admissions, faculty assignments, or system metrics.",
+                chatInputPlaceholder: "Ask a question...",
+                btnSendChat: "Send"
+            }
+        };
+
+        function switchLanguage(lang) {
+            const text = translations[lang];
+            
+            // Set HTML lang attribute
+            document.documentElement.lang = lang;
+
+            // Iterate and assign inner text
+            for (let id in text) {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (id === 'noticeInputPlaceholder') {
+                        document.getElementById('noticeInput').placeholder = text[id];
+                    } else if (id === 'chatInputPlaceholder') {
+                        document.getElementById('chatInput').placeholder = text[id];
+                    } else {
+                        element.innerText = text[id];
+                    }
+                }
+            }
+        }
+
+        // Section tab toggling standard script
+        function showSection(sectionId, element) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            if(element) element.classList.add('active');
+        }
+
+        // Chatbot UI Toggle
+        function toggleChat() {
+            const chat = document.getElementById('chatWindow');
+            chat.style.display = (chat.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        // Initialize Marathi on page load
+        window.onload = function() {
+            switchLanguage('mr');
+        };
+    </script>
+
+    <!-- External Logic File -->
     <script src="admin_dashboard.js"></script>
 </body>
 </html>
