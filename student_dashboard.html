@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="mr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,8 +18,28 @@
         .logout-btn { margin-top: auto; padding: 12px 20px; background: #002244; color: #ffffff; border: 1px solid #1a4d80; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .logout-btn:hover { background: #001122; }
 
+        /* Top Header Bar with Language Switcher */
+        .top-header { display: flex; justify-content: flex-end; align-items: center; padding: 12px 25px; background: #ffffff; border-bottom: 1px solid #e1e8ed; margin-bottom: 20px; }
+        .btn-lang-toggle {
+            background-color: #ffffff;
+            color: #003366;
+            border: 2px solid #003366;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-lang-toggle:hover {
+            background-color: #003366;
+            color: #ffffff;
+        }
+
         /* Main Content Area */
-        .main-content { flex: 1; padding: 25px; overflow-y: auto; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .content-body { padding: 0 25px 25px 25px; }
         .section { display: none; background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 51, 102, 0.08); margin-bottom: 20px; border: 1px solid #e1e8ed; }
         .section.active { display: block; }
         h3 { color: #003366; margin-bottom: 15px; border-bottom: 2px solid #0055a5; padding-bottom: 8px; }
@@ -60,146 +80,381 @@
 
     <!-- Sidebar Navigation -->
     <div class="sidebar">
-        <h2>Swami Vivekanand ERP</h2>
-        <a class="nav-item active" onclick="showSection('profileSec', this)">Profile</a>
-        <a class="nav-item" onclick="showSection('attendanceSec', this)">Attendance</a>
-        <a class="nav-item" onclick="showSection('marksSec', this)">View Marks</a>
-        <a class="nav-item" onclick="showSection('reportSec', this)">Report Card</a>
-        <a class="nav-item" onclick="showSection('timetableSec', this)">Timetable</a>
-        <a class="nav-item" onclick="showSection('holidaySec', this)">Holidays</a>
-        <button class="logout-btn" onclick="logout()">Logout</button>
+        <h2 data-i18n="app_title">स्वामी विवेकानंद ईआरपी</h2>
+        <a class="nav-item active" onclick="showSection('profileSec', this)" data-i18n="nav_profile">प्रोफाईल</a>
+        <a class="nav-item" onclick="showSection('attendanceSec', this)" data-i18n="nav_attendance">उपस्थिती</a>
+        <a class="nav-item" onclick="showSection('marksSec', this)" data-i18n="nav_marks">गुण पहा</a>
+        <a class="nav-item" onclick="showSection('reportSec', this)" data-i18n="nav_report">प्रगती पुस्तक</a>
+        <a class="nav-item" onclick="showSection('timetableSec', this)" data-i18n="nav_timetable">वेळापत्रक</a>
+        <a class="nav-item" onclick="showSection('holidaySec', this)" data-i18n="nav_holidays">सुट्ट्या</a>
+        <button class="logout-btn" onclick="logout()" data-i18n="btn_logout">लॉगआउट</button>
     </div>
 
     <!-- Main Content Area -->
     <div class="main-content">
 
-        <!-- 1. Profile Section -->
-        <div id="profileSec" class="section active">
-            <h3>Student Profile</h3>
-            <div class="card-grid">
-                <div class="card"><label>Student Name</label><p id="profName">-</p></div>
-                <div class="card"><label>Roll Number</label><p id="profRoll">-</p></div>
-                <div class="card"><label>Class & Division</label><p id="profClass">-</p></div>
-                <div class="card"><label>Class Teacher</label><p id="profTeacher">-</p></div>
+        <!-- Top Header with Language Switcher -->
+        <div class="top-header">
+            <button type="button" id="langToggleBtn" class="btn-lang-toggle" onclick="toggleLanguage()">
+                🌐 English
+            </button>
+        </div>
+
+        <div class="content-body">
+
+            <!-- 1. Profile Section -->
+            <div id="profileSec" class="section active">
+                <h3 data-i18n="sec_profile_title">विद्यार्थी प्रोफाईल</h3>
+                <div class="card-grid">
+                    <div class="card"><label data-i18n="lbl_student_name">विद्यार्थ्याचे नाव</label><p id="profName">-</p></div>
+                    <div class="card"><label data-i18n="lbl_roll_no">हजेरी क्रमांक (Roll No)</label><p id="profRoll">-</p></div>
+                    <div class="card"><label data-i18n="lbl_class_div">इयत्ता व तुकडी</label><p id="profClass">-</p></div>
+                    <div class="card"><label data-i18n="lbl_class_teacher">वर्ग शिक्षक</label><p id="profTeacher">-</p></div>
+                </div>
             </div>
-        </div>
 
-        <!-- 2. Attendance Section -->
-        <div id="attendanceSec" class="section">
-            <h3>Attendance Log</h3>
-            <div class="card" style="margin-bottom: 15px; width: 250px;">
-                <label>Total Attendance Percentage</label>
-                <p id="attPct">88.5%</p>
-            </div>
-            <table>
-                <thead><tr><th>Date</th><th>Day</th><th>Status</th></tr></thead>
-                <tbody id="attBody">
-                    <tr><td>2026-08-17</td><td>Monday</td><td><span class="badge-present">Present</span></td></tr>
-                    <tr><td>2026-08-18</td><td>Tuesday</td><td><span class="badge-present">Present</span></td></tr>
-                    <tr><td>2026-08-19</td><td>Wednesday</td><td><span class="badge-absent">Absent</span></td></tr>
-                    <tr><td>2026-08-20</td><td>Thursday</td><td><span class="badge-present">Present</span></td></tr>
-                    <tr><td>2026-08-21</td><td>Friday</td><td><span class="badge-present">Present</span></td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- 3. Marks Section -->
-        <div id="marksSec" class="section">
-            <h3>Subject Marks Breakdown</h3>
-            <table>
-                <thead>
-                    <tr><th>Subject</th><th>Unit Test 1 (20)</th><th>Unit Test 2 (20)</th><th>Assignment (10)</th><th>Oral (10)</th><th>Total (60)</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>English</td><td>18</td><td>17</td><td>9</td><td>9</td><td><b>53</b></td></tr>
-                    <tr><td>Hindi</td><td>16</td><td>18</td><td>8</td><td>10</td><td><b>52</b></td></tr>
-                    <tr><td>Marathi</td><td>19</td><td>18</td><td>10</td><td>9</td><td><b>56</b></td></tr>
-                    <tr><td>Mathematics</td><td>20</td><td>19</td><td>10</td><td>10</td><td><b>59</b></td></tr>
-                    <tr><td>Science</td><td>17</td><td>16</td><td>9</td><td>8</td><td><b>50</b></td></tr>
-                    <tr><td>Social Science</td><td>18</td><td>17</td><td>8</td><td>9</td><td><b>52</b></td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- 4. Report Card Download -->
-        <div id="reportSec" class="section">
-            <h3>Download Report Card</h3>
-            <button class="btn" onclick="downloadPDF()">Download PDF Report Card</button>
-            <div id="reportCardContent" style="padding: 25px; border: 2px solid #003366; margin-top: 15px; background: #ffffff;">
-                <h2 style="text-align: center; color: #003366;">SWAMI VIVEKANAND SCHOOL</h2>
-                <p style="text-align: center; font-weight: bold; margin-bottom: 20px; color: #0055a5;">ANNUAL PROGRESS REPORT CARD</p>
-                <p><b>Student:</b> <span id="rcName">Nikhil Kokate</span> | <b>Class:</b> <span id="rcClass">5th A</span> | <b>Roll No:</b> <span id="rcRoll">101</span></p>
-                <table style="margin-top: 15px;">
+            <!-- 2. Attendance Section -->
+            <div id="attendanceSec" class="section">
+                <h3 data-i18n="sec_attendance_title">उपस्थिती नोंदणी</h3>
+                <div class="card" style="margin-bottom: 15px; width: 250px;">
+                    <label data-i18n="lbl_total_attendance">एकूण उपस्थिती टक्केवारी</label>
+                    <p id="attPct">88.5%</p>
+                </div>
+                <table>
                     <thead>
-                        <tr><th>Subject</th><th>UT1 (20)</th><th>UT2 (20)</th><th>Assign (10)</th><th>Oral (10)</th><th>Term Exam (40)</th><th>Total Marks (100)</th></tr>
+                        <tr>
+                            <th data-i18n="th_date">दिनांक</th>
+                            <th data-i18n="th_day">वार</th>
+                            <th data-i18n="th_status">स्थिती</th>
+                        </tr>
                     </thead>
-                    <tbody>
-                        <tr><td>English</td><td>18</td><td>17</td><td>9</td><td>9</td><td>35</td><td>88</td></tr>
-                        <tr><td>Hindi</td><td>16</td><td>18</td><td>8</td><td>10</td><td>34</td><td>86</td></tr>
-                        <tr><td>Marathi</td><td>19</td><td>18</td><td>10</td><td>9</td><td>36</td><td>92</td></tr>
-                        <tr><td>Mathematics</td><td>20</td><td>19</td><td>10</td><td>10</td><td>38</td><td>97</td></tr>
-                        <tr><td>Science</td><td>17</td><td>16</td><td>9</td><td>8</td><td>33</td><td>83</td></tr>
-                        <tr><td>Social Science</td><td>18</td><td>17</td><td>8</td><td>9</td><td>34</td><td>86</td></tr>
+                    <tbody id="attBody">
+                        <tr><td>2026-08-17</td><td data-i18n="day_mon">सोमवार</td><td><span class="badge-present" data-i18n="status_present">उपस्थित</span></td></tr>
+                        <tr><td>2026-08-18</td><td data-i18n="day_tue">मंगळवार</td><td><span class="badge-present" data-i18n="status_present">उपस्थित</span></td></tr>
+                        <tr><td>2026-08-19</td><td data-i18n="day_wed">बुधवार</td><td><span class="badge-absent" data-i18n="status_absent">अनुपस्थित</span></td></tr>
+                        <tr><td>2026-08-20</td><td data-i18n="day_thu">गुरूवार</td><td><span class="badge-present" data-i18n="status_present">उपस्थित</span></td></tr>
+                        <tr><td>2026-08-21</td><td data-i18n="day_fri">शुक्रवार</td><td><span class="badge-present" data-i18n="status_present">उपस्थित</span></td></tr>
                     </tbody>
                 </table>
-                <p style="margin-top: 20px; font-size: 1.1rem; color: #003366;"><b>Overall Percentage: 88.67%</b> | <b>Grade: A+</b></p>
             </div>
-        </div>
 
-        <!-- 5. Timetable Section -->
-        <div id="timetableSec" class="section">
-            <h3>Class Timetable</h3>
-            <label style="color: #003366;"><b>Select Class:</b> </label>
-            <select id="ttSelect" class="select-input" onchange="renderTimetable(this.value)">
-                <option value="5th A">Class 5th A (Teacher: Dilip Patil)</option>
-                <option value="5th B">Class 5th B (Teacher: Shobha Joshi)</option>
-                <option value="5th C">Class 5th C (Teacher: Vijay Shinde)</option>
-            </select>
-            <div id="ttContainer"></div>
-        </div>
+            <!-- 3. Marks Section -->
+            <div id="marksSec" class="section">
+                <h3 data-i18n="sec_marks_title">विषयनिहाय गुणांचा तपशील</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-i18n="th_subject">विषय</th>
+                            <th data-i18n="th_ut1">घटक चाचणी १ (२०)</th>
+                            <th data-i18n="th_ut2">घटक चाचणी २ (२०)</th>
+                            <th data-i18n="th_assign">स्वाध्याय (१०)</th>
+                            <th data-i18n="th_oral">तोंडी परीक्षा (१०)</th>
+                            <th data-i18n="th_total">एकूण (६०)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-i18n="sub_english">इंग्रजी</td><td>18</td><td>17</td><td>9</td><td>9</td><td><b>53</b></td></tr>
+                        <tr><td data-i18n="sub_hindi">हिंदी</td><td>16</td><td>18</td><td>8</td><td>10</td><td><b>52</b></td></tr>
+                        <tr><td data-i18n="sub_marathi">मराठी</td><td>19</td><td>18</td><td>10</td><td>9</td><td><b>56</b></td></tr>
+                        <tr><td data-i18n="sub_maths">गणित</td><td>20</td><td>19</td><td>10</td><td>10</td><td><b>59</b></td></tr>
+                        <tr><td data-i18n="sub_science">विज्ञान</td><td>17</td><td>16</td><td>9</td><td>8</td><td><b>50</b></td></tr>
+                        <tr><td data-i18n="sub_social">सामाजिक शास्त्रे</td><td>18</td><td>17</td><td>8</td><td>9</td><td><b>52</b></td></tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <!-- 6. Holiday Section -->
-        <div id="holidaySec" class="section">
-            <h3>Academic School Holidays</h3>
-            <table>
-                <thead><tr><th>Date</th><th>Occasion</th><th>Day</th></tr></thead>
-                <tbody>
-                    <tr><td>2026-08-27</td><td>Ganesh Chaturthi</td><td>Thursday</td></tr>
-                    <tr><td>2026-10-02</td><td>Mahatma Gandhi Jayanti</td><td>Friday</td></tr>
-                    <tr><td>2026-11-08</td><td>Diwali Festival</td><td>Sunday</td></tr>
-                    <tr><td>2026-12-25</td><td>Christmas</td><td>Friday</td></tr>
-                    <tr><td>2026-01-26</td><td>Republic Day</td><td>Monday</td></tr>
-                </tbody>
-            </table>
+            <!-- 4. Report Card Download -->
+            <div id="reportSec" class="section">
+                <h3 data-i18n="sec_report_title">प्रगती पुस्तक डाउनलोड करा</h3>
+                <button class="btn" onclick="downloadPDF()" data-i18n="btn_download_pdf">PDF प्रगती पुस्तक डाउनलोड करा</button>
+                <div id="reportCardContent" style="padding: 25px; border: 2px solid #003366; margin-top: 15px; background: #ffffff;">
+                    <h2 style="text-align: center; color: #003366;" data-i18n="rc_school_name">स्वामी विवेकानंद शाळा</h2>
+                    <p style="text-align: center; font-weight: bold; margin-bottom: 20px; color: #0055a5;" data-i18n="rc_heading">वार्षिक प्रगती पुस्तक</p>
+                    <p><b data-i18n="lbl_student">विद्यार्थी:</b> <span id="rcName">Nikhil Kokate</span> | <b data-i18n="lbl_class">इयत्ता:</b> <span id="rcClass">5th A</span> | <b data-i18n="lbl_roll">हजेरी क्र:</b> <span id="rcRoll">101</span></p>
+                    <table style="margin-top: 15px;">
+                        <thead>
+                            <tr>
+                                <th data-i18n="th_subject">विषय</th>
+                                <th data-i18n="th_ut1_short">घ.चा.१ (२०)</th>
+                                <th data-i18n="th_ut2_short">घ.चा.२ (२०)</th>
+                                <th data-i18n="th_assign_short">स्वाध्याय (१०)</th>
+                                <th data-i18n="th_oral_short">तोंडी (१०)</th>
+                                <th data-i18n="th_term_short">सत्रांत (४०)</th>
+                                <th data-i18n="th_total_100">एकूण गुण (१००)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td data-i18n="sub_english">इंग्रजी</td><td>18</td><td>17</td><td>9</td><td>9</td><td>35</td><td>88</td></tr>
+                            <tr><td data-i18n="sub_hindi">हिंदी</td><td>16</td><td>18</td><td>8</td><td>10</td><td>34</td><td>86</td></tr>
+                            <tr><td data-i18n="sub_marathi">मराठी</td><td>19</td><td>18</td><td>10</td><td>9</td><td>36</td><td>92</td></tr>
+                            <tr><td data-i18n="sub_maths">गणित</td><td>20</td><td>19</td><td>10</td><td>10</td><td>38</td><td>97</td></tr>
+                            <tr><td data-i18n="sub_science">विज्ञान</td><td>17</td><td>16</td><td>9</td><td>8</td><td>33</td><td>83</td></tr>
+                            <tr><td data-i18n="sub_social">सामाजिक शास्त्रे</td><td>18</td><td>17</td><td>8</td><td>9</td><td>34</td><td>86</td></tr>
+                        </tbody>
+                    </table>
+                    <p style="margin-top: 20px; font-size: 1.1rem; color: #003366;"><b data-i18n="rc_overall_pct">एकूण टक्केवारी: ८८.६७%</b> | <b data-i18n="rc_grade">श्रेणी: A+</b></p>
+                </div>
+            </div>
+
+            <!-- 5. Timetable Section -->
+            <div id="timetableSec" class="section">
+                <h3 data-i18n="sec_timetable_title">वर्ग वेळापत्रक</h3>
+                <label style="color: #003366;"><b data-i18n="lbl_select_class">इयत्ता निवडा:</b> </label>
+                <select id="ttSelect" class="select-input" onchange="renderTimetable(this.value)">
+                    <option value="5th A">Class 5th A (Teacher: Dilip Patil)</option>
+                    <option value="5th B">Class 5th B (Teacher: Shobha Joshi)</option>
+                    <option value="5th C">Class 5th C (Teacher: Vijay Shinde)</option>
+                </select>
+                <div id="ttContainer"></div>
+            </div>
+
+            <!-- 6. Holiday Section -->
+            <div id="holidaySec" class="section">
+                <h3 data-i18n="sec_holidays_title">शैक्षणिक वर्षातील सुट्ट्या</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-i18n="th_date">दिनांक</th>
+                            <th data-i18n="th_occasion">निमित्त</th>
+                            <th data-i18n="th_day">वार</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>2026-08-27</td><td data-i18n="hol_ganesh">गणेश चतुर्थी</td><td data-i18n="day_thu">गुरूवार</td></tr>
+                        <tr><td>2026-10-02</td><td data-i18n="hol_gandhi">महात्मा गांधी जयंती</td><td data-i18n="day_fri">शुक्रवार</td></tr>
+                        <tr><td>2026-11-08</td><td data-i18n="hol_diwali">दिवाळी सण</td><td data-i18n="day_sun">रविवार</td></tr>
+                        <tr><td>2026-12-25</td><td data-i18n="hol_xmas">नाताळ (नाताळ)</td><td data-i18n="day_fri">शुक्रवार</td></tr>
+                        <tr><td>2026-01-26</td><td data-i18n="hol_republic">प्रजासत्ताक दिन</td><td data-i18n="day_mon">सोमवार</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
         </div>
 
     </div>
 
     <!-- 7. Multilingual Voice Chatbot Widget -->
-    <button class="chatbot-btn" onclick="toggleChat()">💬 Student Assistant</button>
+    <button class="chatbot-btn" onclick="toggleChat()" id="chatbotBtn">💬 विद्यार्थी सहाय्यक</button>
     <div class="chat-window" id="chatWindow">
         <div class="chat-header">
-            <span>AI Student Assistant</span>
+            <span id="chatHeaderTitle">AI विद्यार्थी सहाय्यक</span>
             <div>
                 <select id="chatLang" style="background: #ffffff; color: #003366; border: none; border-radius: 3px; font-size: 0.75rem; padding: 2px; font-weight: bold;">
+                    <option value="mr-IN">मराठी</option>
                     <option value="en-US">English</option>
                     <option value="hi-IN">Hindi</option>
-                    <option value="mr-IN">Marathi</option>
                 </select>
                 <button onclick="toggleChat()" style="background:none; border:none; color:#ffffff; font-weight:bold; cursor:pointer; margin-left: 5px;">✕</button>
             </div>
         </div>
         <div class="chat-body" id="chatBody">
-            <div class="chat-msg bot">Hello! Ask me about attendance, marks, or holidays.</div>
+            <div class="chat-msg bot" id="chatWelcomeMsg">नमस्कार! मला उपस्थिती, गुण किंवा सुट्ट्यांबद्दल विचारा.</div>
         </div>
         <div class="chat-footer">
-            <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendChat()">
-            <button class="btn" onclick="sendChat()">Send</button>
+            <input type="text" id="chatInput" placeholder="संदेश टाईप करा..." data-i18n-placeholder="ph_chat_input" onkeypress="if(event.key==='Enter') sendChat()">
+            <button class="btn" onclick="sendChat()" data-i18n="btn_send">पाठवा</button>
             <button class="btn" style="background:#002244;" onclick="startVoice()">🎙️</button>
         </div>
     </div>
 
     <script>
+        // ==========================================
+        // MULTILINGUAL DICTIONARY (Marathi Default)
+        // ==========================================
+        const dashboardTranslations = {
+            mr: {
+                lang_btn: "🌐 English",
+                app_title: "स्वामी विवेकानंद ईआरपी",
+                nav_profile: "प्रोफाईल",
+                nav_attendance: "उपस्थिती",
+                nav_marks: "गुण पहा",
+                nav_report: "प्रगती पुस्तक",
+                nav_timetable: "वेळापत्रक",
+                nav_holidays: "सुट्ट्या",
+                btn_logout: "लॉगआउट",
+                sec_profile_title: "विद्यार्थी प्रोफाईल",
+                lbl_student_name: "विद्यार्थ्याचे नाव",
+                lbl_roll_no: "हजेरी क्रमांक (Roll No)",
+                lbl_class_div: "इयत्ता व तुकडी",
+                lbl_class_teacher: "वर्ग शिक्षक",
+                sec_attendance_title: "उपस्थिती नोंदणी",
+                lbl_total_attendance: "एकूण उपस्थिती टक्केवारी",
+                th_date: "दिनांक",
+                th_day: "वार",
+                th_status: "स्थिती",
+                day_mon: "सोमवार",
+                day_tue: "मंगळवार",
+                day_wed: "बुधवार",
+                day_thu: "गुरूवार",
+                day_fri: "शुक्रवार",
+                day_sat: "शनिवार",
+                day_sun: "रविवार",
+                status_present: "उपस्थित",
+                status_absent: "अनुपस्थित",
+                sec_marks_title: "विषयनिहाय गुणांचा तपशील",
+                th_subject: "विषय",
+                th_ut1: "घटक चाचणी १ (२०)",
+                th_ut2: "घटक चाचणी २ (२०)",
+                th_assign: "स्वाध्याय (१०)",
+                th_oral: "तोंडी परीक्षा (१०)",
+                th_total: "एकूण (६०)",
+                sub_english: "इंग्रजी",
+                sub_hindi: "हिंदी",
+                sub_marathi: "मराठी",
+                sub_maths: "गणित",
+                sub_science: "विज्ञान",
+                sub_social: "सामाजिक शास्त्रे",
+                sec_report_title: "प्रगती पुस्तक डाउनलोड करा",
+                btn_download_pdf: "PDF प्रगती पुस्तक डाउनलोड करा",
+                rc_school_name: "स्वामी विवेकानंद शाळा",
+                rc_heading: "वार्षिक प्रगती पुस्तक",
+                lbl_student: "विद्यार्थी:",
+                lbl_class: "इयत्ता:",
+                lbl_roll: "हजेरी क्र:",
+                th_ut1_short: "घ.चा.१ (२०)",
+                th_ut2_short: "घ.चा.२ (२०)",
+                th_assign_short: "स्वाध्याय (१०)",
+                th_oral_short: "तोंडी (१०)",
+                th_term_short: "सत्रांत (४०)",
+                th_total_100: "एकूण गुण (१००)",
+                rc_overall_pct: "एकूण टक्केवारी: ८८.६७%",
+                rc_grade: "श्रेणी: A+",
+                sec_timetable_title: "वर्ग वेळापत्रक",
+                lbl_select_class: "इयत्ता निवडा:",
+                th_time: "वेळ",
+                sec_holidays_title: "शैक्षणिक वर्षातील सुट्ट्या",
+                th_occasion: "निमित्त",
+                hol_ganesh: "गणेश चतुर्थी",
+                hol_gandhi: "महात्मा गांधी जयंती",
+                hol_diwali: "दिवाळी सण",
+                hol_xmas: "नाताळ",
+                hol_republic: "प्रजासत्ताक दिन",
+                chatbot_btn: "💬 विद्यार्थी सहाय्यक",
+                chat_header: "AI विद्यार्थी सहाय्यक",
+                chat_welcome: "नमस्कार! मला उपस्थिती, गुण किंवा सुट्ट्यांबद्दल विचारा.",
+                ph_chat_input: "संदेश टाईप करा...",
+                btn_send: "पाठवा"
+            },
+            en: {
+                lang_btn: "🌐 मराठी",
+                app_title: "Swami Vivekanand ERP",
+                nav_profile: "Profile",
+                nav_attendance: "Attendance",
+                nav_marks: "View Marks",
+                nav_report: "Report Card",
+                nav_timetable: "Timetable",
+                nav_holidays: "Holidays",
+                btn_logout: "Logout",
+                sec_profile_title: "Student Profile",
+                lbl_student_name: "Student Name",
+                lbl_roll_no: "Roll Number",
+                lbl_class_div: "Class & Division",
+                lbl_class_teacher: "Class Teacher",
+                sec_attendance_title: "Attendance Log",
+                lbl_total_attendance: "Total Attendance Percentage",
+                th_date: "Date",
+                th_day: "Day",
+                th_status: "Status",
+                day_mon: "Monday",
+                day_tue: "Tuesday",
+                day_wed: "Wednesday",
+                day_thu: "Thursday",
+                day_fri: "Friday",
+                day_sat: "Saturday",
+                day_sun: "Sunday",
+                status_present: "Present",
+                status_absent: "Absent",
+                sec_marks_title: "Subject Marks Breakdown",
+                th_subject: "Subject",
+                th_ut1: "Unit Test 1 (20)",
+                th_ut2: "Unit Test 2 (20)",
+                th_assign: "Assignment (10)",
+                th_oral: "Oral (10)",
+                th_total: "Total (60)",
+                sub_english: "English",
+                sub_hindi: "Hindi",
+                sub_marathi: "Marathi",
+                sub_maths: "Mathematics",
+                sub_science: "Science",
+                sub_social: "Social Science",
+                sec_report_title: "Download Report Card",
+                btn_download_pdf: "Download PDF Report Card",
+                rc_school_name: "SWAMI VIVEKANAND SCHOOL",
+                rc_heading: "ANNUAL PROGRESS REPORT CARD",
+                lbl_student: "Student:",
+                lbl_class: "Class:",
+                lbl_roll: "Roll No:",
+                th_ut1_short: "UT1 (20)",
+                th_ut2_short: "UT2 (20)",
+                th_assign_short: "Assign (10)",
+                th_oral_short: "Oral (10)",
+                th_term_short: "Term Exam (40)",
+                th_total_100: "Total Marks (100)",
+                rc_overall_pct: "Overall Percentage: 88.67%",
+                rc_grade: "Grade: A+",
+                sec_timetable_title: "Class Timetable",
+                lbl_select_class: "Select Class:",
+                th_time: "Time",
+                sec_holidays_title: "Academic School Holidays",
+                th_occasion: "Occasion",
+                hol_ganesh: "Ganesh Chaturthi",
+                hol_gandhi: "Mahatma Gandhi Jayanti",
+                hol_diwali: "Diwali Festival",
+                hol_xmas: "Christmas",
+                hol_republic: "Republic Day",
+                chatbot_btn: "💬 Student Assistant",
+                chat_header: "AI Student Assistant",
+                chat_welcome: "Hello! Ask me about attendance, marks, or holidays.",
+                ph_chat_input: "Type a message...",
+                btn_send: "Send"
+            }
+        };
+
+        // Active language state (default: Marathi)
+        let currentLang = localStorage.getItem('appLanguage') || 'mr';
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'mr' ? 'en' : 'mr';
+            localStorage.setItem('appLanguage', currentLang);
+            applyLanguage(currentLang);
+        }
+
+        function applyLanguage(lang) {
+            const langBtn = document.getElementById('langToggleBtn');
+            if (langBtn) langBtn.innerText = dashboardTranslations[lang].lang_btn;
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dashboardTranslations[lang] && dashboardTranslations[lang][key]) {
+                    el.innerText = dashboardTranslations[lang][key];
+                }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (dashboardTranslations[lang] && dashboardTranslations[lang][key]) {
+                    el.placeholder = dashboardTranslations[lang][key];
+                }
+            });
+
+            // Update chatbot elements
+            const chatbotBtn = document.getElementById('chatbotBtn');
+            if (chatbotBtn) chatbotBtn.innerText = dashboardTranslations[lang].chatbot_btn;
+
+            const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+            if (chatHeaderTitle) chatHeaderTitle.innerText = dashboardTranslations[lang].chat_header;
+
+            const chatWelcomeMsg = document.getElementById('chatWelcomeMsg');
+            if (chatWelcomeMsg) chatWelcomeMsg.innerText = dashboardTranslations[lang].chat_welcome;
+
+            const chatLangSelect = document.getElementById('chatLang');
+            if (chatLangSelect) chatLangSelect.value = lang === 'mr' ? 'mr-IN' : 'en-US';
+
+            // Refresh current timetable rendering with updated headers
+            const selectedClass = document.getElementById('ttSelect') ? document.getElementById('ttSelect').value : "5th A";
+            renderTimetable(selectedClass);
+        }
+
         // Class Teacher Mapping
         const classTeachers = {
             "5th A": "Dilip Patil", "5th B": "Shobha Joshi", "5th C": "Vijay Shinde",
@@ -253,8 +508,10 @@
             }
         };
 
-        // Initialize User Session
+        // Initialize User Session and Language
         document.addEventListener('DOMContentLoaded', () => {
+            applyLanguage(currentLang);
+
             const rawUser = localStorage.getItem('userData');
             let user = rawUser ? JSON.parse(rawUser) : { name: "Nikhil Kokate", roll_no: "101", class: "5th", div: "A" };
             
@@ -281,12 +538,19 @@
             btn.classList.add('active');
         }
 
-        // Render Timetable
+        // Render Timetable with active language day headers
         function renderTimetable(clsKey) {
             const data = timetables[clsKey];
             if(!data) return;
 
-            let html = `<h4 style="color: #003366; margin-bottom: 10px;">Class Teacher: ${data.teacher}</h4><table><thead><tr><th>Time</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th></tr></thead><tbody>`;
+            const days = currentLang === 'mr' 
+                ? ["सोमवार", "मंगळवार", "बुधवार", "गुरूवार", "शुक्रवार", "शनिवार"] 
+                : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            
+            const timeLabel = currentLang === 'mr' ? "वेळ" : "Time";
+            const teacherPrefix = currentLang === 'mr' ? "वर्ग शिक्षक:" : "Class Teacher:";
+
+            let html = `<h4 style="color: #003366; margin-bottom: 10px;">${teacherPrefix} ${data.teacher}</h4><table><thead><tr><th>${timeLabel}</th>${days.map(d => `<th>${d}</th>`).join('')}</tr></thead><tbody>`;
             data.schedule.forEach(row => {
                 html += `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
             });
