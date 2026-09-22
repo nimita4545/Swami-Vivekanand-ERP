@@ -1,12 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="mr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swami Vivekanand School ERP</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Language Toggle Button Positioning */
+        .lang-toggle-wrapper {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .btn-lang-toggle {
+            background-color: #ffffff;
+            color: #1a365d;
+            border: 2px solid #1a365d;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-lang-toggle:hover {
+            background-color: #1a365d;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+    </style>
 </head>
 <body>
+
+    <!-- Language Toggle Button (Top Right Corner) -->
+    <div class="lang-toggle-wrapper">
+        <button type="button" id="langToggleBtn" class="btn-lang-toggle" onclick="toggleLanguage()">
+            🌐 English
+        </button>
+    </div>
 
     <div class="background"></div>
     <div class="overlay"></div>
@@ -14,8 +52,8 @@
     <main class="page">
 
         <header class="brand">
-            <h1>Swami Vivekanand</h1>
-            <p>SCHOOL ERP SYSTEM</p>
+            <h1>स्वामी विवेकानंद</h1>
+            <p data-i18n="subtitle">शाळा ईआरपी प्रणाली</p>
         </header>
 
         <section class="login-card">
@@ -24,28 +62,30 @@
                 <img src="education-logo.jpg" alt="Education Logo">
             </div>
 
-            <h2>Login</h2>
+            <h2 data-i18n="login_title">लॉगिन</h2>
 
             <form id="loginForm">
 
-                <label for="username">Username</label>
+                <label for="username" data-i18n="lbl_username">वापरकर्ता नाव (Username)</label>
                 <input
                     type="text"
                     id="username"
-                    placeholder="Enter username"
+                    placeholder="वापरकर्ता नाव प्रविष्ट करा"
+                    data-i18n-placeholder="ph_username"
                     required
                 >
 
-                <label for="password">Password</label>
+                <label for="password" data-i18n="lbl_password">पासवर्ड (Password)</label>
                 <input
                     type="password"
                     id="password"
-                    placeholder="Enter password"
+                    placeholder="पासवर्ड प्रविष्ट करा"
+                    data-i18n-placeholder="ph_password"
                     required
                 >
 
-                <div class="role-title">
-                    Login As
+                <div class="role-title" data-i18n="role_title">
+                    या नात्याने लॉगिन करा
                 </div>
 
                 <div class="roles">
@@ -53,32 +93,36 @@
                         type="button"
                         class="role active"
                         data-role="student"
+                        data-i18n="role_student"
                     >
-                        Student
+                        विद्यार्थी
                     </button>
 
                     <button
                         type="button"
                         class="role"
                         data-role="teacher"
+                        data-i18n="role_teacher"
                     >
-                        Teacher
+                        शिक्षक
                     </button>
 
                     <button
                         type="button"
                         class="role"
                         data-role="admin"
+                        data-i18n="role_admin"
                     >
-                        Admin
+                        प्रशासक (Admin)
                     </button>
                 </div>
 
                 <button
                     class="login-btn"
                     type="submit"
+                    data-i18n="btn_login"
                 >
-                    Login
+                    लॉगिन करा
                 </button>
 
                 <p id="message" class="message"></p>
