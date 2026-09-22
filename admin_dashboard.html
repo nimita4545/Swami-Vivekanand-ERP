@@ -1,16 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="mr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Swami Vivekanand School ERP</title>
+    <title data-i18n="pageTitle">प्रशासन पॅनेल - स्वामी विवेकानंद शाळा ERP</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f8fb; color: #0d253f; display: flex; min-height: 100vh; }
         
-        /* Sidebar Navigation - Navy & White */
+        /* Sidebar Navigation */
         .sidebar { width: 260px; background: #003366; color: #ffffff; padding: 20px 0; display: flex; flex-direction: column; border-right: 2px solid #002244; }
-        .sidebar h2 { text-align: center; font-size: 1.1rem; margin-bottom: 25px; padding: 0 15px 15px 15px; border-bottom: 1px solid #1a4d80; }
+        .sidebar h2 { text-align: center; font-size: 1.1rem; margin-bottom: 15px; padding: 0 15px 15px 15px; border-bottom: 1px solid #1a4d80; }
+        
+        /* Language Switcher Dropdown Container */
+        .lang-container { padding: 0 15px 15px 15px; text-align: center; border-bottom: 1px solid #1a4d80; margin-bottom: 15px; }
+        .lang-container label { font-size: 0.8rem; color: #d9e6f2; display: block; margin-bottom: 5px; }
+        .lang-select { width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #1a4d80; background: #002244; color: #ffffff; font-weight: bold; outline: none; cursor: pointer; }
+
         .nav-item { padding: 12px 20px; color: #d9e6f2; text-decoration: none; display: block; cursor: pointer; transition: 0.2s; font-weight: 500; }
         .nav-item:hover, .nav-item.active { background: #0055a5; color: #ffffff; font-weight: bold; border-left: 5px solid #ffffff; }
         .logout-btn { margin-top: auto; padding: 12px 20px; background: #002244; color: #ffffff; border: 1px solid #1a4d80; cursor: pointer; font-weight: bold; transition: 0.2s; }
@@ -62,13 +68,23 @@
 
     <!-- Sidebar Navigation -->
     <div class="sidebar">
-        <h2>Swami Vivekanand ERP</h2>
-        <a class="nav-item active" onclick="showSection('overviewSec', this)">Admin Overview</a>
-        <a class="nav-item" onclick="showSection('studentsSec', this)">Manage Students</a>
-        <a class="nav-item" onclick="showSection('teachersSec', this)">Manage Teachers</a>
-        <a class="nav-item" onclick="showSection('announcementsSec', this)">School Notice Board</a>
-        <a class="nav-item" onclick="showSection('holidaySec', this)">School Holidays</a>
-        <button class="logout-btn" onclick="logout()">Logout</button>
+        <h2>स्वामी विवेकानंद ERP</h2>
+        
+        <!-- Language Selector Switcher -->
+        <div class="lang-container">
+            <label data-i18n="selectLanguage">भाषा निवडा / Select Language</label>
+            <select class="lang-select" id="langSelect" onchange="changeLanguage(this.value)">
+                <option value="mr" selected>मराठी (Marathi)</option>
+                <option value="en">English</option>
+            </select>
+        </div>
+
+        <a class="nav-item active" onclick="showSection('overviewSec', this)" data-i18n="navOverview">प्रशासकीय आढावा</a>
+        <a class="nav-item" onclick="showSection('studentsSec', this)" data-i18n="navStudents">विद्यार्थी व्यवस्थापन</a>
+        <a class="nav-item" onclick="showSection('teachersSec', this)" data-i18n="navTeachers">शिक्षक व्यवस्थापन</a>
+        <a class="nav-item" onclick="showSection('announcementsSec', this)" data-i18n="navNotice">शाळा सूचना फलक</a>
+        <a class="nav-item" onclick="showSection('holidaySec', this)" data-i18n="navHolidays">शालेय सुट्ट्या</a>
+        <button class="logout-btn" onclick="logout()" data-i18n="logoutBtn">लॉगआउट</button>
     </div>
 
     <!-- Main Content Area -->
@@ -76,35 +92,41 @@
 
         <!-- 1. Admin Overview Section -->
         <div id="overviewSec" class="section active">
-            <h3>Administrator Dashboard Profile</h3>
+            <h3 data-i18n="overviewTitle">प्रशासक डैशबोर्ड प्रोफाइल</h3>
             <div class="card-grid">
-                <div class="card"><label>Admin Name</label><p id="admName">Admin Staff</p></div>
-                <div class="card"><label>Designation</label><p id="admRole">System Administrator</p></div>
-                <div class="card"><label>Total Enrolled Students</label><p id="totalStudents"><span id="totalStudentCount">0</span></p></div>
-                <div class="card"><label>Total Teaching Staff</label><p id="totalTeachers"><span id="totalTeacherCount">0</span></p></div>
+                <div class="card"><label data-i18n="admNameLbl">प्रशासकाचे नाव</label><p id="admName" data-i18n="admNameVal">प्रशासक कर्मचारी</p></div>
+                <div class="card"><label data-i18n="admRoleLbl">पदनाम</label><p id="admRole" data-i18n="admRoleVal">सिस्टम प्रशासक</p></div>
+                <div class="card"><label data-i18n="totalStuLbl">एकूण नोंदणीकृत विद्यार्थी</label><p id="totalStudents"><span id="totalStudentCount">0</span></p></div>
+                <div class="card"><label data-i18n="totalTchLbl">एकूण शिक्षक वर्ग</label><p id="totalTeachers"><span id="totalTeacherCount">0</span></p></div>
             </div>
         </div>
 
         <!-- 2. Manage Students Section -->
         <div id="studentsSec" class="section">
-            <h3>Student Directory & Registration</h3>
+            <h3 data-i18n="studentsTitle">विद्यार्थी निर्देशिका आणि नोंदणी</h3>
             
             <!-- Registration Form -->
             <div style="background: #f0f6fb; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #c8d6e5;">
-                <h4 style="color: #003366; margin-bottom: 10px;">Add New Student</h4>
+                <h4 style="color: #003366; margin-bottom: 10px;" data-i18n="addStuHeader">नवीन विद्यार्थी जोडा</h4>
                 <div class="form-grid">
-                    <div class="form-group"><label>Student Name</label><input type="text" id="stuName" placeholder="Full Name"></div>
-                    <div class="form-group"><label>Class & Division</label><input type="text" id="stuClass" placeholder="e.g. 5th A"></div>
-                    <div class="form-group"><label>Roll Number</label><input type="text" id="stuRoll" placeholder="e.g. 101"></div>
-                    <div class="form-group"><label>School ID / Password</label><input type="text" id="stuId" placeholder="e.g. SCH101"></div>
+                    <div class="form-group"><label data-i18n="stuNameLbl">विद्यार्थ्याचे नाव</label><input type="text" id="stuName" data-i18n-ph="stuNamePh" placeholder="पूर्ण नाव"></div>
+                    <div class="form-group"><label data-i18n="stuClassLbl">इयत्ता आणि तुकडी</label><input type="text" id="stuClass" data-i18n-ph="stuClassPh" placeholder="उदा. ५ वी अ"></div>
+                    <div class="form-group"><label data-i18n="stuRollLbl">हजेरी क्रमांक (रोल नं)</label><input type="text" id="stuRoll" data-i18n-ph="stuRollPh" placeholder="उदा. १०१"></div>
+                    <div class="form-group"><label data-i18n="stuIdLbl">शाळा आयडी / पासवर्ड</label><input type="text" id="stuId" data-i18n-ph="stuIdPh" placeholder="उदा. SCH101"></div>
                 </div>
-                <button class="btn" onclick="addStudent()">Register Student</button>
+                <button class="btn" onclick="addStudent()" data-i18n="regStuBtn">विद्यार्थ्याची नोंदणी करा</button>
             </div>
 
             <!-- Directory Table -->
             <table>
                 <thead>
-                    <tr><th>Roll No</th><th>Student Name</th><th>Class & Div</th><th>Father Name / Info</th><th>School ID / Action</th></tr>
+                    <tr>
+                        <th data-i18n="thRoll">रोल नं</th>
+                        <th data-i18n="thStuName">विद्यार्थ्याचे नाव</th>
+                        <th data-i18n="thClass">इयत्ता व तुकडी</th>
+                        <th data-i18n="thParent">पालकांचे नाव / माहिती</th>
+                        <th data-i18n="thIdAction">शाळा आयडी / कारवाई</th>
+                    </tr>
                 </thead>
                 <tbody id="adminStudentTableBody">
                     <!-- Populated dynamically by admin_dashboard.js -->
@@ -114,24 +136,30 @@
 
         <!-- 3. Manage Teachers Section -->
         <div id="teachersSec" class="section">
-            <h3>Faculty Management</h3>
+            <h3 data-i18n="teachersTitle">शिक्षक व्यवस्थापन</h3>
             
             <!-- Add Teacher Form -->
             <div style="background: #f0f6fb; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #c8d6e5;">
-                <h4 style="color: #003366; margin-bottom: 10px;">Assign New Faculty Member</h4>
+                <h4 style="color: #003366; margin-bottom: 10px;" data-i18n="addTchHeader">नवीन शिक्षकाची नियुक्ती करा</h4>
                 <div class="form-grid">
-                    <div class="form-group"><label>Teacher Name</label><input type="text" id="tchNameInput" placeholder="Teacher Full Name"></div>
-                    <div class="form-group"><label>Assigned Class</label><input type="text" id="tchClassInput" placeholder="e.g. 5th A"></div>
-                    <div class="form-group"><label>Qualifications</label><input type="text" id="tchEduInput" placeholder="e.g. M.Sc. B.Ed"></div>
-                    <div class="form-group"><label>Username</label><input type="text" id="tchUserInput" placeholder="e.g. teacher123"></div>
+                    <div class="form-group"><label data-i18n="tchNameLbl">शिक्षकाचे नाव</label><input type="text" id="tchNameInput" data-i18n-ph="tchNamePh" placeholder="शिक्षकाचे पूर्ण नाव"></div>
+                    <div class="form-group"><label data-i18n="tchClassLbl">नियुक्त इयत्ता</label><input type="text" id="tchClassInput" data-i18n-ph="tchClassPh" placeholder="उदा. ५ वी अ"></div>
+                    <div class="form-group"><label data-i18n="tchEduLbl">शैक्षणिक पात्रता</label><input type="text" id="tchEduInput" data-i18n-ph="tchEduPh" placeholder="उदा. एम.एससी. बी.एड"></div>
+                    <div class="form-group"><label data-i18n="tchUserLbl">युझरनेम</label><input type="text" id="tchUserInput" data-i18n-ph="tchUserPh" placeholder="उदा. teacher123"></div>
                 </div>
-                <button class="btn" onclick="addTeacher()">Add Faculty Member</button>
+                <button class="btn" onclick="addTeacher()" data-i18n="addTchBtn">शिक्षक जोडा</button>
             </div>
 
             <!-- Teacher Directory Table -->
             <table>
                 <thead>
-                    <tr><th>#</th><th>Teacher Name</th><th>Class Assigned</th><th>Education</th><th>Role</th></tr>
+                    <tr>
+                        <th data-i18n="thSr">क्र.</th>
+                        <th data-i18n="thTchName">शिक्षकाचे नाव</th>
+                        <th data-i18n="thClassAssigned">नियुक्त वर्ग</th>
+                        <th data-i18n="thEdu">शिक्षण</th>
+                        <th data-i18n="thUserAction">युझरनेम / कारवाई</th>
+                    </tr>
                 </thead>
                 <tbody id="adminTeacherTableBody">
                     <!-- Populated dynamically by admin_dashboard.js -->
@@ -141,32 +169,38 @@
 
         <!-- 4. Notice Board / Announcements -->
         <div id="announcementsSec" class="section">
-            <h3>School Notice Board</h3>
+            <h3 data-i18n="noticeTitle">शाळा सूचना फलक</h3>
             <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-                <input type="text" id="noticeInput" placeholder="Type school announcement or notice..." style="flex: 1; padding: 10px; border: 1px solid #0055a5; border-radius: 4px;">
-                <button class="btn" onclick="postNotice()">Publish Notice</button>
+                <input type="text" id="noticeInput" data-i18n-ph="noticePh" placeholder="शाळेची नवीन सूचना येथे टाईप करा..." style="flex: 1; padding: 10px; border: 1px solid #0055a5; border-radius: 4px;">
+                <button class="btn" onclick="postNotice()" data-i18n="postNoticeBtn">सूचना प्रसिद्ध करा</button>
             </div>
             <ul id="noticeList" style="list-style-type: none;">
                 <li style="background: #f4f8fb; padding: 12px; border-left: 4px solid #0055a5; margin-bottom: 10px; border-radius: 4px;">
-                    <strong>[2026-08-20]:</strong> Terminal examination schedules for standard 5th to 10th have been uploaded.
+                    <strong>[२०२६-०८-२०]:</strong> <span data-i18n="notice1">इयत्ता ५ वी ते १० वी साठी सत्र परीक्षेचे वेळापत्रक अपलोड करण्यात आले आहे.</span>
                 </li>
                 <li style="background: #f4f8fb; padding: 12px; border-left: 4px solid #0055a5; margin-bottom: 10px; border-radius: 4px;">
-                    <strong>[2026-08-15]:</strong> Independence Day celebration starts at 7:30 AM in the school main ground.
+                    <strong>[२०२६-०८-१५]:</strong> <span data-i18n="notice2">स्वातंत्र्यदिन सोहळा सकाळी ७:३० वाजता शाळेच्या मुख्य मैदानावर सुरू होईल.</span>
                 </li>
             </ul>
         </div>
 
         <!-- 5. Holiday Section -->
         <div id="holidaySec" class="section">
-            <h3>Academic School Holidays</h3>
+            <h3 data-i18n="holidayTitle">शैक्षणिक वर्षातील सुट्ट्या</h3>
             <table>
-                <thead><tr><th>Date</th><th>Occasion</th><th>Day</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th data-i18n="thDate">दिनांक</th>
+                        <th data-i18n="thOccasion">निमित्त / सण</th>
+                        <th data-i18n="thDay">वार</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    <tr><td>2026-08-27</td><td>Ganesh Chaturthi</td><td>Thursday</td></tr>
-                    <tr><td>2026-10-02</td><td>Mahatma Gandhi Jayanti</td><td>Friday</td></tr>
-                    <tr><td>2026-11-08</td><td>Diwali Festival</td><td>Sunday</td></tr>
-                    <tr><td>2026-12-25</td><td>Christmas</td><td>Friday</td></tr>
-                    <tr><td>2026-01-26</td><td>Republic Day</td><td>Monday</td></tr>
+                    <tr><td>2026-08-27</td><td data-i18n="hol1">गणेश चतुर्थी</td><td data-i18n="dayThu">गुरुवार</td></tr>
+                    <tr><td>2026-10-02</td><td data-i18n="hol2">महात्मा गांधी जयंती</td><td data-i18n="dayFri">शुक्रवार</td></tr>
+                    <tr><td>2026-11-08</td><td data-i18n="hol3">दिवाळी सण</td><td data-i18n="daySun">रविवार</td></tr>
+                    <tr><td>2026-12-25</td><td data-i18n="hol4">नाताळ (ख्रिसमस)</td><td data-i18n="dayFri">शुक्रवार</td></tr>
+                    <tr><td>2026-01-26</td><td data-i18n="hol5">प्रजासत्ताक दिन</td><td data-i18n="dayMon">सोमवार</td></tr>
                 </tbody>
             </table>
         </div>
@@ -174,22 +208,22 @@
     </div>
 
     <!-- 6. AI Admin Assistant Chatbot Widget -->
-    <button class="chatbot-btn" onclick="toggleChat()">💬 Admin Assistant</button>
+    <button class="chatbot-btn" onclick="toggleChat()" data-i18n="chatbotBtn">💬 AI सहाय्यक</button>
     <div class="chat-window" id="chatWindow">
         <div class="chat-header">
-            <span>AI Admin Assistant</span>
+            <span data-i18n="chatHeader">AI प्रशासकीय सहाय्यक</span>
             <button onclick="toggleChat()" style="background:none; border:none; color:#ffffff; font-weight:bold; cursor:pointer;">✕</button>
         </div>
         <div class="chat-body" id="chatBody">
-            <div class="chat-msg bot">Welcome Administrator! You can ask me queries regarding total admissions, faculty assignments, or system metrics.</div>
+            <div class="chat-msg bot" id="botWelcomeMsg" data-i18n="chatWelcome">नमस्कार प्रशासक! आपण मला एकूण प्रवेश, शिक्षक वाटप किंवा सिस्टीमच्या माहितीबद्दल विचारू शकता.</div>
         </div>
         <div class="chat-footer">
-            <input type="text" id="chatInput" placeholder="Ask a question..." onkeypress="if(event.key==='Enter') sendChat()">
-            <button class="btn" onclick="sendChat()">Send</button>
+            <input type="text" id="chatInput" data-i18n-ph="chatPh" placeholder="प्रश्न विचारा..." onkeypress="if(event.key==='Enter') sendChat()">
+            <button class="btn" onclick="sendChat()" data-i18n="sendBtn">पाठवा</button>
         </div>
     </div>
 
-    <!-- Admin Dashboard Data Handler -->
+    <!-- Admin Dashboard Data & Translation Handler -->
     <script src="admin_dashboard.js"></script>
 </body>
 </html>
