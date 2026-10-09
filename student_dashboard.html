@@ -570,45 +570,61 @@
             win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
         }
 
-        function sendChat() {
+        async function sendChat() {
             const input = document.getElementById('chatInput');
             const msg = input.value.trim();
             if(!msg) return;
 
+            // 1. Append User Message
             appendMsg(msg, 'user');
             input.value = '';
 
             const lang = document.getElementById('chatLang').value;
-            let response = "";
 
-            const q = msg.toLowerCase();
-            if(q.includes("attendance") || q.includes("उपस्थिती") || q.includes("उपस्थिति")) {
-                response = lang.startsWith("mr") ? "तुमची एकूण उपस्थिती ८८.५% आहे." : 
-                           lang.startsWith("hi") ? "आपकी कुल उपस्थिति 88.5% है।" : "Your total attendance is 88.5%.";
-            } else if(q.includes("mark") || q.includes("गुण") || q.includes("अंक")) {
-                response = lang.startsWith("mr") ? "तुमचे एकूण गुण ८८.६७% आहेत. गणित: ५९/६०." : 
-                           lang.startsWith("hi") ? "आपके कुल अंक 88.67% हैं। गणित: 59/60." : "Your overall marks percentage is 88.67%. Math: 59/60.";
-            } else if(q.includes("holiday") || q.includes("सुट्टी") || q.includes("छुट्टी")) {
-                response = lang.startsWith("mr") ? "पुढील सुट्टी २७ ऑगस्ट रोजी गणेश चतुर्थीसाठी आहे." : 
-                           lang.startsWith("hi") ? "अगली छुट्टी 27 अगस्त को गणेश चतुर्थी की है।" : "Next holiday is Ganesh Chaturthi on August 27th.";
-            } else {
-                response = lang.startsWith("mr") ? "मी तुम्हाला उपस्थिती, गुण आणि सुट्ट्यांबद्दल माहिती देऊ शकतो." : 
-                           lang.startsWith("hi") ? "मैं आपको उपस्थिति, अंक और छुट्टियों की जानकारी दे सकता हूँ।" : "I can help you check your attendance, marks, and holidays.";
+            // 2. Append Loading Message
+            const loadingText = lang.startsWith("mr") ? "विचार करत आहे..." : 
+                                lang.startsWith("hi") ? "सोच रहा हूँ..." : "Thinking...";
+            const loadingMsgId = appendMsg(loadingText, 'bot');
+
+            try {
+                // 3. Post to Flask API (/api/chat)
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: msg })
+                });
+
+                const data = await response.json();
+                const botDiv = document.getElementById(loadingMsgId);
+
+                if (response.ok && data.response) {
+                    botDiv.innerText = data.response;
+                    speakText(data.response, lang);
+                } else {
+                    const errMsg = data.error || (lang.startsWith("mr") ? "माझ्याकडे ERP मध्ये ही माहिती उपलब्ध नाही." : 
+                                                 lang.startsWith("hi") ? "मेरे पास ERP में यह जानकारी उपलब्ध नहीं है।" : "I don't have this information in the ERP.");
+                    botDiv.innerText = errMsg;
+                }
+            } catch (error) {
+                const botDiv = document.getElementById(loadingMsgId);
+                const netErrMsg = lang.startsWith("mr") ? "सर्व्हरशी संपर्क होऊ शकला नाही." : 
+                                  lang.startsWith("hi") ? "सर्वर से संपर्क नहीं हो सका।" : "Could not connect to the server.";
+                botDiv.innerText = netErrMsg;
             }
-
-            setTimeout(() => {
-                appendMsg(response, 'bot');
-                speakText(response, lang);
-            }, 500);
         }
 
         function appendMsg(text, type) {
             const body = document.getElementById('chatBody');
             const div = document.createElement('div');
+            const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
+            div.id = msgId;
             div.className = `chat-msg ${type}`;
             div.innerText = text;
             body.appendChild(div);
             body.scrollTop = body.scrollHeight;
+            return msgId;
         }
 
         // Speech Synthesis (Voice output)
