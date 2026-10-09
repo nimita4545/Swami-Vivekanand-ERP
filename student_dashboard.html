@@ -570,37 +570,326 @@
             win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
         }
 
-        function sendChat() {
-            const input = document.getElementById('chatInput');
-            const msg = input.value.trim();
-            if(!msg) return;
+        
+function sendChat() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
 
-            appendMsg(msg, 'user');
-            input.value = '';
+    if (!msg) return;
 
-            const lang = document.getElementById('chatLang').value;
-            let response = "";
+    appendMsg(msg, 'user');
+    input.value = '';
 
-            const q = msg.toLowerCase();
-            if(q.includes("attendance") || q.includes("उपस्थिती") || q.includes("उपस्थिति")) {
-                response = lang.startsWith("mr") ? "तुमची एकूण उपस्थिती ८८.५% आहे." : 
-                           lang.startsWith("hi") ? "आपकी कुल उपस्थिति 88.5% है।" : "Your total attendance is 88.5%.";
-            } else if(q.includes("mark") || q.includes("गुण") || q.includes("अंक")) {
-                response = lang.startsWith("mr") ? "तुमचे एकूण गुण ८८.६७% आहेत. गणित: ५९/६०." : 
-                           lang.startsWith("hi") ? "आपके कुल अंक 88.67% हैं। गणित: 59/60." : "Your overall marks percentage is 88.67%. Math: 59/60.";
-            } else if(q.includes("holiday") || q.includes("सुट्टी") || q.includes("छुट्टी")) {
-                response = lang.startsWith("mr") ? "पुढील सुट्टी २७ ऑगस्ट रोजी गणेश चतुर्थीसाठी आहे." : 
-                           lang.startsWith("hi") ? "अगली छुट्टी 27 अगस्त को गणेश चतुर्थी की है।" : "Next holiday is Ganesh Chaturthi on August 27th.";
-            } else {
-                response = lang.startsWith("mr") ? "मी तुम्हाला उपस्थिती, गुण आणि सुट्ट्यांबद्दल माहिती देऊ शकतो." : 
-                           lang.startsWith("hi") ? "मैं आपको उपस्थिति, अंक और छुट्टियों की जानकारी दे सकता हूँ।" : "I can help you check your attendance, marks, and holidays.";
+    const lang = document.getElementById('chatLang').value;
+    const q = msg.toLowerCase().replace(/[?!.,]/g, ' ').trim();
+
+    const has = (...words) => words.some(word => q.includes(word));
+
+    const reply = (mr, en, hi) => {
+        if (lang.startsWith('mr')) return mr;
+        if (lang.startsWith('hi')) return hi;
+        return en;
+    };
+
+    const getText = id =>
+        document.getElementById(id)?.innerText?.trim() || '-';
+
+    const studentName = getText('profName');
+    const rollNo = getText('profRoll');
+    const studentClass = getText('profClass');
+    const teacher = getText('profTeacher');
+    const attendance = getText('attPct');
+
+    let response = '';
+
+    // ----------------------------------
+    // 1. GREETINGS
+    // ----------------------------------
+    if (has('hello', 'hi', 'hey', 'namaste', 'नमस्कार',
+             'नमस्ते', 'हॅलो', 'हाय', 'हेलो')) {
+
+        response = reply(
+            `नमस्कार ${studentName}! मी तुमचा विद्यार्थी सहाय्यक आहे. तुम्हाला कशाची माहिती हवी आहे?`,
+            `Hello ${studentName}! I am your Student Assistant. What would you like to know?`,
+            `नमस्ते ${studentName}! मैं आपका विद्यार्थी सहायक हूँ। आपको क्या जानना है?`
+        );
+    }
+
+    // ----------------------------------
+    // 2. STUDENT PROFILE
+    // ----------------------------------
+    else if (has('profile', 'my name', 'student name', 'who am i',
+                 'roll number', 'roll no', 'my class', 'my division',
+                 'माझे नाव', 'माझं नाव', 'माझी माहिती', 'माझा वर्ग',
+                 'हजेरी क्रमांक', 'रोल नंबर', 'मेरा नाम', 'मेरी कक्षा',
+                 'मेरा रोल नंबर', 'परिचय')) {
+
+        response = reply(
+            `विद्यार्थी माहिती:\nनाव: ${studentName}\nहजेरी क्रमांक: ${rollNo}\nइयत्ता: ${studentClass}\nवर्ग शिक्षक: ${teacher}`,
+            `Student Profile:\nName: ${studentName}\nRoll Number: ${rollNo}\nClass: ${studentClass}\nClass Teacher: ${teacher}`,
+            `विद्यार्थी जानकारी:\nनाम: ${studentName}\nरोल नंबर: ${rollNo}\nकक्षा: ${studentClass}\nकक्षा शिक्षक: ${teacher}`
+        );
+    }
+
+    // ----------------------------------
+    // 3. CLASS TEACHER
+    // ----------------------------------
+    else if (has('teacher', 'class teacher', 'my teacher',
+                 'शिक्षक', 'शिक्षिका', 'वर्ग शिक्षक', 'माझे शिक्षक',
+                 'टीचर', 'अध्यापक', 'अध्यापिका', 'क्लास टीचर')) {
+
+        response = reply(
+            `तुमच्या वर्गाचे शिक्षक: ${teacher}.`,
+            `Your class teacher is ${teacher}.`,
+            `आपकी कक्षा के शिक्षक ${teacher} हैं।`
+        );
+    }
+
+    // ----------------------------------
+    // 4. ATTENDANCE
+    // ----------------------------------
+    else if (has('attendance', 'present', 'absent', 'attendance percentage',
+                 'उपस्थिती', 'हजेरी', 'गैरहजर', 'अनुपस्थित',
+                 'उपस्थिति', 'हाजिरी', 'गैरहाजिर', 'कितने दिन उपस्थित')) {
+
+        const rows = [...document.querySelectorAll('#attBody tr')];
+        const presentCount = rows.filter(r =>
+            /present|उपस्थित/i.test(r.innerText)
+        ).length;
+
+        const absentCount = rows.filter(r =>
+            /absent|अनुपस्थित/i.test(r.innerText)
+        ).length;
+
+        response = reply(
+            `तुमची नोंदवलेली एकूण उपस्थिती: ${attendance}\nदाखवलेल्या नोंदींमध्ये उपस्थित: ${presentCount} दिवस, अनुपस्थित: ${absentCount} दिवस.`,
+            `Your recorded overall attendance is ${attendance}.\nIn the displayed records: Present: ${presentCount} days; Absent: ${absentCount} days.`,
+            `आपकी दर्ज की गई कुल उपस्थिति ${attendance} है।\nदिखाए गए रिकॉर्ड में उपस्थित: ${presentCount} दिन; अनुपस्थित: ${absentCount} दिन।`
+        );
+    }
+
+    // ----------------------------------
+    // 5. SUBJECT-WISE MARKS
+    // ----------------------------------
+    else if (has('marks', 'mark', 'score', 'subject marks', 'subject wise',
+                 'गुण', 'मार्क', 'अंक', 'विषयाचे गुण', 'विषयनिहाय',
+                 'मेरे अंक', 'मेरे नंबर', 'विषय के अंक')) {
+
+        const rows = [
+            ...document.querySelectorAll('#marksSec tbody tr')
+        ];
+
+        const subjects = {
+            english: ['english', 'इंग्रजी', 'अंग्रेजी', 'इंग्लिश'],
+            hindi: ['hindi', 'हिंदी'],
+            marathi: ['marathi', 'मराठी'],
+            maths: ['math', 'maths', 'mathematics', 'गणित', 'मैथ'],
+            science: ['science', 'विज्ञान'],
+            social: ['social science', 'social studies',
+                     'सामाजिक शास्त्रे', 'सामाजिक विज्ञान']
+        };
+
+        // Find whether the student asked for a specific subject.
+        let selectedRow = null;
+
+        for (const row of rows) {
+            const subjectName = row.cells[0]?.innerText.trim().toLowerCase();
+
+            if (!subjectName) continue;
+
+            const key = Object.keys(subjects).find(k =>
+                subjects[k].some(word =>
+                    subjectName.includes(word.toLowerCase())
+                )
+            );
+
+            if (key && subjects[key].some(word => q.includes(word))) {
+                selectedRow = row;
+                break;
             }
-
-            setTimeout(() => {
-                appendMsg(response, 'bot');
-                speakText(response, lang);
-            }, 500);
         }
+
+        if (selectedRow) {
+            const c = selectedRow.cells;
+
+            response = reply(
+                `${c[0].innerText}: घटक चाचणी १: ${c[1].innerText}/20, घटक चाचणी २: ${c[2].innerText}/20, स्वाध्याय: ${c[3].innerText}/10, तोंडी परीक्षा: ${c[4].innerText}/10, एकूण: ${c[5].innerText}/60.`,
+                `${c[0].innerText}: Unit Test 1: ${c[1].innerText}/20, Unit Test 2: ${c[2].innerText}/20, Assignment: ${c[3].innerText}/10, Oral: ${c[4].innerText}/10, Total: ${c[5].innerText}/60.`,
+                `${c[0].innerText}: यूनिट टेस्ट 1: ${c[1].innerText}/20, यूनिट टेस्ट 2: ${c[2].innerText}/20, असाइनमेंट: ${c[3].innerText}/10, मौखिक परीक्षा: ${c[4].innerText}/10, कुल: ${c[5].innerText}/60।`
+            );
+        } else {
+            const details = rows.map(r => {
+                const c = r.cells;
+                return `${c[0].innerText}: ${c[5].innerText}/60`;
+            }).join('\n');
+
+            response = reply(
+                `विषयनिहाय गुण:\n${details}\n\nविशिष्ट विषयाचे गुण पाहण्यासाठी विषयाचे नाव विचारा.`,
+                `Subject-wise marks:\n${details}\n\nAsk for a specific subject to see its detailed marks.`,
+                `विषयवार अंक:\n${details}\n\nकिसी विषय के विस्तृत अंक जानने के लिए उस विषय का नाम पूछें।`
+            );
+        }
+    }
+
+    // ----------------------------------
+    // 6. HIGHEST MARKS / BEST SUBJECT
+    // ----------------------------------
+    else if (has('highest', 'top marks', 'best subject', 'maximum marks',
+                 'सर्वाधिक गुण', 'जास्त गुण', 'सर्वात चांगला विषय',
+                 'सबसे ज्यादा अंक', 'अधिकतम अंक', 'सबसे अच्छे अंक')) {
+
+        const rows = [...document.querySelectorAll('#marksSec tbody tr')];
+
+        const best = rows.reduce((current, row) => {
+            const total = Number(row.cells[5]?.innerText) || 0;
+            return !current || total > current.total
+                ? { name: row.cells[0].innerText, total }
+                : current;
+        }, null);
+
+        response = best ? reply(
+            `तुमचे सर्वाधिक गुण ${best.name} या विषयात आहेत: ${best.total}/60.`,
+            `Your highest subject score is in ${best.name}: ${best.total}/60.`,
+            `आपके सबसे अधिक अंक ${best.name} विषय में हैं: ${best.total}/60।`
+        ) : reply(
+            'गुणांची माहिती उपलब्ध नाही.',
+            'Marks data is unavailable.',
+            'अंकों की जानकारी उपलब्ध नहीं है।'
+        );
+    }
+
+    // ----------------------------------
+    // 7. REPORT CARD / PERCENTAGE / GRADE
+    // ----------------------------------
+    else if (has('report card', 'progress report', 'percentage',
+                 'overall result', 'grade', 'download report',
+                 'प्रगती पुस्तक', 'गुणपत्रक', 'टक्केवारी',
+                 'निकाल', 'श्रेणी', 'रिपोर्ट कार्ड', 'प्रतिशत',
+                 'परिणाम', 'ग्रेड', 'डाउनलोड')) {
+
+        const report = document.getElementById('reportCardContent');
+        const reportText = report?.innerText || '';
+
+        const percentage = reportText.match(
+            /(?:Overall Percentage|एकूण टक्केवारी)\s*:\s*([\d.]+\s*%)/i
+        );
+
+        const grade = reportText.match(
+            /(?:Grade|श्रेणी)\s*:\s*([A-Z][+ -]*)/i
+        );
+
+        response = reply(
+            `प्रगती पुस्तकाची माहिती:\nविद्यार्थी: ${getText('rcName')}\nइयत्ता: ${getText('rcClass')}\nहजेरी क्रमांक: ${getText('rcRoll')}\nटक्केवारी: ${percentage?.[1] || 'उपलब्ध नाही'}\nश्रेणी: ${grade?.[1] || 'उपलब्ध नाही'}\nPDF डाउनलोड करण्यासाठी Report Card विभागातील बटण वापरा.`,
+            `Report Card Information:\nStudent: ${getText('rcName')}\nClass: ${getText('rcClass')}\nRoll Number: ${getText('rcRoll')}\nPercentage: ${percentage?.[1] || 'Not available'}\nGrade: ${grade?.[1] || 'Not available'}\nUse the button in the Report Card section to download the PDF.`,
+            `रिपोर्ट कार्ड की जानकारी:\nविद्यार्थी: ${getText('rcName')}\nकक्षा: ${getText('rcClass')}\nरोल नंबर: ${getText('rcRoll')}\nप्रतिशत: ${percentage?.[1] || 'उपलब्ध नहीं'}\nग्रेड: ${grade?.[1] || 'उपलब्ध नहीं'}\nPDF डाउनलोड करने के लिए Report Card सेक्शन का बटन इस्तेमाल करें।`
+        );
+    }
+
+    // ----------------------------------
+    // 8. TIMETABLE
+    // ----------------------------------
+    else if (has('timetable', 'time table', 'schedule', 'period',
+                 'class timing', 'वेळापत्रक', 'तासिका', 'वेळ',
+                 'समय सारणी', 'टाइम टेबल', 'कक्षा का समय', 'पीरियड')) {
+
+        const selectedClass = document.getElementById('ttSelect')?.value || '5th A';
+        const timetable = document.getElementById('ttContainer');
+
+        response = reply(
+            `तुम्ही सध्या ${selectedClass} चे वेळापत्रक पाहत आहात.\n${timetable?.innerText || 'वेळापत्रक उपलब्ध नाही'}\nवेगळ्या वर्गाचे वेळापत्रक पाहण्यासाठी वर्ग निवडा.`,
+            `You are viewing the timetable for ${selectedClass}.\n${timetable?.innerText || 'Timetable unavailable'}\nSelect a different class to view its timetable.`,
+            `आप ${selectedClass} की समय सारणी देख रहे हैं।\n${timetable?.innerText || 'समय सारणी उपलब्ध नहीं है'}\nदूसरी कक्षा की समय सारणी देखने के लिए कक्षा चुनें।`
+        );
+    }
+
+    // ----------------------------------
+    // 9. HOLIDAYS
+    // ----------------------------------
+    else if (has('holiday', 'holidays', 'vacation', 'next holiday',
+                 'सुट्टी', 'सुट्ट्या', 'रजा', 'छुट्टी', 'छुट्टियाँ',
+                 'अवकाश', 'अगली छुट्टी', 'पुढील सुट्टी')) {
+
+        const rows = [...document.querySelectorAll('#holidaySec tbody tr')];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const futureHolidays = rows
+            .map(row => ({
+                date: row.cells[0]?.innerText.trim(),
+                name: row.cells[1]?.innerText.trim(),
+                day: row.cells[2]?.innerText.trim()
+            }))
+            .filter(h => {
+                const d = new Date(h.date + 'T00:00:00');
+                return h.date && !isNaN(d) && d >= today;
+            })
+            .sort((a, b) => a.date.localeCompare(b.date));
+
+        if (futureHolidays.length) {
+            const next = futureHolidays[0];
+            const date = new Date(next.date + 'T00:00:00')
+                .toLocaleDateString(
+                    lang.startsWith('mr') ? 'mr-IN' :
+                    lang.startsWith('hi') ? 'hi-IN' : 'en-IN'
+                );
+
+            response = reply(
+                `पुढील नोंदवलेली सुट्टी: ${next.name}, ${date} (${next.day}).\n\nइतर सुट्ट्या:\n${futureHolidays.map(h => `${h.date}: ${h.name}`).join('\n')}`,
+                `Next listed holiday: ${next.name}, ${date} (${next.day}).\n\nOther upcoming holidays:\n${futureHolidays.map(h => `${h.date}: ${h.name}`).join('\n')}`,
+                `अगली दर्ज की गई छुट्टी: ${next.name}, ${date} (${next.day})।\n\nआने वाली अन्य छुट्टियाँ:\n${futureHolidays.map(h => `${h.date}: ${h.name}`).join('\n')}`
+            );
+        } else {
+            response = reply(
+                'नोंदवलेल्या यादीत आजपासून पुढील सुट्टी उपलब्ध नाही.',
+                'No future holidays are listed in the current holiday table.',
+                'वर्तमान छुट्टी सूची में आज के बाद की कोई छुट्टी दर्ज नहीं है।'
+            );
+        }
+    }
+
+    // ----------------------------------
+    // 10. SUBJECT LIST
+    // ----------------------------------
+    else if (has('subjects', 'subject list', 'which subjects',
+                 'विषय', 'विषयांची नावे', 'कौन से विषय', 'विषयों के नाम')) {
+
+        response = reply(
+            'तुमचे विषय: इंग्रजी, हिंदी, मराठी, गणित, विज्ञान आणि सामाजिक शास्त्रे.',
+            'Your subjects are English, Hindi, Marathi, Mathematics, Science, and Social Science.',
+            'आपके विषय हैं: अंग्रेज़ी, हिंदी, मराठी, गणित, विज्ञान और सामाजिक विज्ञान।'
+        );
+    }
+
+    // ----------------------------------
+    // 11. HELP / AVAILABLE QUESTIONS
+    // ----------------------------------
+    else if (has('help', 'what can you do', 'your features',
+                 'मदत', 'काय विचारू', 'काय करू शकतो',
+                 'सहायता', 'मदद', 'क्या पूछ सकता', 'क्या कर सकते हो')) {
+
+        response = reply(
+            'मी तुम्हाला पुढील माहिती देऊ शकतो:\n1. विद्यार्थी प्रोफाईल\n2. उपस्थिती\n3. विषयानुसार गुण\n4. सर्वाधिक गुण\n5. प्रगती पुस्तक व टक्केवारी\n6. वेळापत्रक\n7. सुट्ट्या\n8. वर्ग शिक्षक\n\nउदा. "माझी उपस्थिती किती आहे?" किंवा "गणिताचे गुण सांगा".',
+            'I can help with:\n1. Student profile\n2. Attendance\n3. Subject-wise marks\n4. Highest marks\n5. Report card and percentage\n6. Timetable\n7. Holidays\n8. Class teacher\n\nExamples: "What is my attendance?" or "Show my Mathematics marks".',
+            'मैं इन विषयों में मदद कर सकता हूँ:\n1. विद्यार्थी प्रोफाइल\n2. उपस्थिति\n3. विषयवार अंक\n4. सबसे अधिक अंक\n5. रिपोर्ट कार्ड और प्रतिशत\n6. समय सारणी\n7. छुट्टियाँ\n8. कक्षा शिक्षक\n\nउदाहरण: "मेरी उपस्थिति कितनी है?" या "गणित के अंक बताओ"।'
+        );
+    }
+
+    // ----------------------------------
+    // 12. UNKNOWN QUERY
+    // ----------------------------------
+    else {
+        response = reply(
+            'माफ करा, मला हा प्रश्न समजला नाही. तुम्ही उपस्थिती, गुण, विद्यार्थी प्रोफाईल, शिक्षक, वेळापत्रक किंवा सुट्ट्यांबद्दल विचारा. मदतीसाठी "मदत" असे लिहा.',
+            'Sorry, I could not understand that question. Ask me about attendance, marks, your profile, teacher, timetable, or holidays. Type "help" to see examples.',
+            'क्षमा करें, मैं यह प्रश्न नहीं समझ पाया। आप उपस्थिति, अंक, प्रोफाइल, शिक्षक, समय सारणी या छुट्टियों के बारे में पूछ सकते हैं। उदाहरण देखने के लिए "मदद" लिखें।'
+        );
+    }
+
+    setTimeout(() => {
+        appendMsg(response, 'bot');
+        speakText(response, lang);
+    }, 300);
+}
 
         function appendMsg(text, type) {
             const body = document.getElementById('chatBody');
