@@ -259,6 +259,14 @@
 
     <script>
         // ==========================================
+        // CONFIGURATION: Set Backend API Endpoint
+        // ==========================================
+        // Replace this URL with your exact Render web service URL
+        const API_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+            ? "http://127.0.0.1:5000"
+            : "https://swami-vivekanand-erp-backend2-16.onrender.com"; // <--- Put your actual Render URL here!
+
+        // ==========================================
         // MULTILINGUAL DICTIONARY (Marathi Default)
         // ==========================================
         const dashboardTranslations = {
@@ -410,7 +418,6 @@
             }
         };
 
-        // Active language state (default: Marathi)
         let currentLang = localStorage.getItem('appLanguage') || 'mr';
 
         function toggleLanguage() {
@@ -437,7 +444,6 @@
                 }
             });
 
-            // Update chatbot elements
             const chatbotBtn = document.getElementById('chatbotBtn');
             if (chatbotBtn) chatbotBtn.innerText = dashboardTranslations[lang].chatbot_btn;
 
@@ -450,12 +456,10 @@
             const chatLangSelect = document.getElementById('chatLang');
             if (chatLangSelect) chatLangSelect.value = lang === 'mr' ? 'mr-IN' : 'en-US';
 
-            // Refresh current timetable rendering with updated headers
             const selectedClass = document.getElementById('ttSelect') ? document.getElementById('ttSelect').value : "5th A";
             renderTimetable(selectedClass);
         }
 
-        // Class Teacher Mapping
         const classTeachers = {
             "5th A": "Dilip Patil", "5th B": "Shobha Joshi", "5th C": "Vijay Shinde",
             "6th A": "Kavita Mane", "6th B": "Deepak Wagh", "6th C": "Vijaya More",
@@ -465,7 +469,6 @@
             "10th A": "Shobha Thakur", "10th B": "Shobha Sawant", "10th C": "Archana Wagh"
         };
 
-        // Timetable Data
         const timetables = {
             "5th A": {
                 teacher: "Dilip Patil",
@@ -508,7 +511,6 @@
             }
         };
 
-        // Initialize User Session and Language
         document.addEventListener('DOMContentLoaded', () => {
             applyLanguage(currentLang);
 
@@ -530,7 +532,6 @@
             renderTimetable("5th A");
         });
 
-        // Tab Navigation
         function showSection(id, btn) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -538,7 +539,6 @@
             btn.classList.add('active');
         }
 
-        // Render Timetable with active language day headers
         function renderTimetable(clsKey) {
             const data = timetables[clsKey];
             if(!data) return;
@@ -558,87 +558,93 @@
             document.getElementById('ttContainer').innerHTML = html;
         }
 
-        // Download Report Card as PDF
         function downloadPDF() {
             const element = document.getElementById('reportCardContent');
             html2pdf().from(element).save('ReportCard.pdf');
         }
 
-        // Chatbot Controls
         function toggleChat() {
             const win = document.getElementById('chatWindow');
             win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
         }
 
+        // ==========================================
+        // DYNAMIC GEMINI BACKEND CONNECTED CHAT
+        // ==========================================
         async function sendChat() {
             const input = document.getElementById('chatInput');
             const msg = input.value.trim();
-            if(!msg) return;
+            if (!msg) return;
 
-            // 1. Append User Message
             appendMsg(msg, 'user');
             input.value = '';
 
-            const lang = document.getElementById('chatLang').value;
+            const langSelect = document.getElementById('chatLang').value;
 
-            // 2. Append Loading Message
-            const loadingText = lang.startsWith("mr") ? "विचार करत आहे..." : 
-                                lang.startsWith("hi") ? "सोच रहा हूँ..." : "Thinking...";
-            const loadingMsgId = appendMsg(loadingText, 'bot');
+            // Get logged in student username or roll number
+            const rawUser = localStorage.getItem('userData');
+            let userObj = rawUser ? JSON.parse(rawUser) : {};
+            let studentUsername = userObj.username || userObj.roll_no || "101";
+
+            // Add loading indicator message
+            const loadingDivId = "loading-" + Date.now();
+            appendMsg("विचार करत आहे...", 'bot', loadingDivId);
 
             try {
-                // 3. Post to Flask API (/api/chat)
-                const response = await fetch('/api/chat', {
+                const response = await fetch(`${API_BASE_URL}/api/chat`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ message: msg })
+                    body: JSON.stringify({
+                        message: msg,
+                        username: studentUsername,
+                        role: "student"
+                    })
                 });
 
                 const data = await response.json();
-                const botDiv = document.getElementById(loadingMsgId);
 
-                if (response.ok && data.response) {
-                    botDiv.innerText = data.response;
-                    speakText(data.response, lang);
+                // Remove loading message
+                const loadingElem = document.getElementById(loadingDivId);
+                if (loadingElem) loadingElem.remove();
+
+                if (data.success && data.response) {
+                    appendMsg(data.response, 'bot');
+                    speakText(data.response, langSelect);
                 } else {
-                    const errMsg = data.error || (lang.startsWith("mr") ? "माझ्याकडे ERP मध्ये ही माहिती उपलब्ध नाही." : 
-                                                 lang.startsWith("hi") ? "मेरे पास ERP में यह जानकारी उपलब्ध नहीं है।" : "I don't have this information in the ERP.");
-                    botDiv.innerText = errMsg;
+                    const errTxt = data.error || "उत्तर मिळू शकले नाही. कृपया पुन्हा प्रयत्न करा.";
+                    appendMsg(errTxt, 'bot');
                 }
-            } catch (error) {
-                const botDiv = document.getElementById(loadingMsgId);
-                const netErrMsg = lang.startsWith("mr") ? "सर्व्हरशी संपर्क होऊ शकला नाही." : 
-                                  lang.startsWith("hi") ? "सर्वर से संपर्क नहीं हो सका।" : "Could not connect to the server.";
-                botDiv.innerText = netErrMsg;
+            } catch (err) {
+                console.error("Chat API Error:", err);
+                const loadingElem = document.getElementById(loadingDivId);
+                if (loadingElem) loadingElem.remove();
+                appendMsg("सर्व्हरशी संपर्क होऊ शकला नाही. कृपया सर्व्हर ऑन आहे का ते तपासा.", 'bot');
             }
         }
 
-        function appendMsg(text, type) {
+        function appendMsg(text, type, elementId = null) {
             const body = document.getElementById('chatBody');
             const div = document.createElement('div');
-            const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
-            div.id = msgId;
             div.className = `chat-msg ${type}`;
+            if (elementId) div.id = elementId;
             div.innerText = text;
             body.appendChild(div);
             body.scrollTop = body.scrollHeight;
-            return msgId;
         }
 
-        // Speech Synthesis (Voice output)
         function speakText(text, lang) {
-            if('speechSynthesis' in window) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Clear existing speech queue
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = lang;
                 window.speechSynthesis.speak(utterance);
             }
         }
 
-        // Speech Recognition (Voice Input)
         function startVoice() {
-            if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                 alert("Speech recognition is not supported in your browser.");
                 return;
             }
