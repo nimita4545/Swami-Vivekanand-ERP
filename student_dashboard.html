@@ -259,14 +259,6 @@
 
     <script>
         // ==========================================
-        // CONFIGURATION: Set Backend API Endpoint
-        // ==========================================
-        // Replace this URL with your exact Render web service URL
-        const API_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-            ? "http://127.0.0.1:5000"
-            : "https://swami-vivekanand-erp-backend2-16.onrender.com"; // <--- Put your actual Render URL here!
-
-        // ==========================================
         // MULTILINGUAL DICTIONARY (Marathi Default)
         // ==========================================
         const dashboardTranslations = {
@@ -418,6 +410,7 @@
             }
         };
 
+        // Active language state (default: Marathi)
         let currentLang = localStorage.getItem('appLanguage') || 'mr';
 
         function toggleLanguage() {
@@ -444,6 +437,7 @@
                 }
             });
 
+            // Update chatbot elements
             const chatbotBtn = document.getElementById('chatbotBtn');
             if (chatbotBtn) chatbotBtn.innerText = dashboardTranslations[lang].chatbot_btn;
 
@@ -456,10 +450,12 @@
             const chatLangSelect = document.getElementById('chatLang');
             if (chatLangSelect) chatLangSelect.value = lang === 'mr' ? 'mr-IN' : 'en-US';
 
+            // Refresh current timetable rendering with updated headers
             const selectedClass = document.getElementById('ttSelect') ? document.getElementById('ttSelect').value : "5th A";
             renderTimetable(selectedClass);
         }
 
+        // Class Teacher Mapping
         const classTeachers = {
             "5th A": "Dilip Patil", "5th B": "Shobha Joshi", "5th C": "Vijay Shinde",
             "6th A": "Kavita Mane", "6th B": "Deepak Wagh", "6th C": "Vijaya More",
@@ -469,6 +465,7 @@
             "10th A": "Shobha Thakur", "10th B": "Shobha Sawant", "10th C": "Archana Wagh"
         };
 
+        // Timetable Data
         const timetables = {
             "5th A": {
                 teacher: "Dilip Patil",
@@ -511,6 +508,7 @@
             }
         };
 
+        // Initialize User Session and Language
         document.addEventListener('DOMContentLoaded', () => {
             applyLanguage(currentLang);
 
@@ -532,6 +530,7 @@
             renderTimetable("5th A");
         });
 
+        // Tab Navigation
         function showSection(id, btn) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -539,6 +538,7 @@
             btn.classList.add('active');
         }
 
+        // Render Timetable with active language day headers
         function renderTimetable(clsKey) {
             const data = timetables[clsKey];
             if(!data) return;
@@ -558,93 +558,71 @@
             document.getElementById('ttContainer').innerHTML = html;
         }
 
+        // Download Report Card as PDF
         function downloadPDF() {
             const element = document.getElementById('reportCardContent');
             html2pdf().from(element).save('ReportCard.pdf');
         }
 
+        // Chatbot Controls
         function toggleChat() {
             const win = document.getElementById('chatWindow');
             win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
         }
 
-        // ==========================================
-        // DYNAMIC GEMINI BACKEND CONNECTED CHAT
-        // ==========================================
-        async function sendChat() {
+        function sendChat() {
             const input = document.getElementById('chatInput');
             const msg = input.value.trim();
-            if (!msg) return;
+            if(!msg) return;
 
             appendMsg(msg, 'user');
             input.value = '';
 
-            const langSelect = document.getElementById('chatLang').value;
+            const lang = document.getElementById('chatLang').value;
+            let response = "";
 
-            // Get logged in student username or roll number
-            const rawUser = localStorage.getItem('userData');
-            let userObj = rawUser ? JSON.parse(rawUser) : {};
-            let studentUsername = userObj.username || userObj.roll_no || "101";
-
-            // Add loading indicator message
-            const loadingDivId = "loading-" + Date.now();
-            appendMsg("विचार करत आहे...", 'bot', loadingDivId);
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/chat`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: msg,
-                        username: studentUsername,
-                        role: "student"
-                    })
-                });
-
-                const data = await response.json();
-
-                // Remove loading message
-                const loadingElem = document.getElementById(loadingDivId);
-                if (loadingElem) loadingElem.remove();
-
-                if (data.success && data.response) {
-                    appendMsg(data.response, 'bot');
-                    speakText(data.response, langSelect);
-                } else {
-                    const errTxt = data.error || "उत्तर मिळू शकले नाही. कृपया पुन्हा प्रयत्न करा.";
-                    appendMsg(errTxt, 'bot');
-                }
-            } catch (err) {
-                console.error("Chat API Error:", err);
-                const loadingElem = document.getElementById(loadingDivId);
-                if (loadingElem) loadingElem.remove();
-                appendMsg("सर्व्हरशी संपर्क होऊ शकला नाही. कृपया सर्व्हर ऑन आहे का ते तपासा.", 'bot');
+            const q = msg.toLowerCase();
+            if(q.includes("attendance") || q.includes("उपस्थिती") || q.includes("उपस्थिति")) {
+                response = lang.startsWith("mr") ? "तुमची एकूण उपस्थिती ८८.५% आहे." : 
+                           lang.startsWith("hi") ? "आपकी कुल उपस्थिति 88.5% है।" : "Your total attendance is 88.5%.";
+            } else if(q.includes("mark") || q.includes("गुण") || q.includes("अंक")) {
+                response = lang.startsWith("mr") ? "तुमचे एकूण गुण ८८.६७% आहेत. गणित: ५९/६०." : 
+                           lang.startsWith("hi") ? "आपके कुल अंक 88.67% हैं। गणित: 59/60." : "Your overall marks percentage is 88.67%. Math: 59/60.";
+            } else if(q.includes("holiday") || q.includes("सुट्टी") || q.includes("छुट्टी")) {
+                response = lang.startsWith("mr") ? "पुढील सुट्टी २७ ऑगस्ट रोजी गणेश चतुर्थीसाठी आहे." : 
+                           lang.startsWith("hi") ? "अगली छुट्टी 27 अगस्त को गणेश चतुर्थी की है।" : "Next holiday is Ganesh Chaturthi on August 27th.";
+            } else {
+                response = lang.startsWith("mr") ? "मी तुम्हाला उपस्थिती, गुण आणि सुट्ट्यांबद्दल माहिती देऊ शकतो." : 
+                           lang.startsWith("hi") ? "मैं आपको उपस्थिति, अंक और छुट्टियों की जानकारी दे सकता हूँ।" : "I can help you check your attendance, marks, and holidays.";
             }
+
+            setTimeout(() => {
+                appendMsg(response, 'bot');
+                speakText(response, lang);
+            }, 500);
         }
 
-        function appendMsg(text, type, elementId = null) {
+        function appendMsg(text, type) {
             const body = document.getElementById('chatBody');
             const div = document.createElement('div');
             div.className = `chat-msg ${type}`;
-            if (elementId) div.id = elementId;
             div.innerText = text;
             body.appendChild(div);
             body.scrollTop = body.scrollHeight;
         }
 
+        // Speech Synthesis (Voice output)
         function speakText(text, lang) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Clear existing speech queue
+            if('speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = lang;
                 window.speechSynthesis.speak(utterance);
             }
         }
 
+        // Speech Recognition (Voice Input)
         function startVoice() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                 alert("Speech recognition is not supported in your browser.");
                 return;
             }
