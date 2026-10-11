@@ -1,4 +1,4 @@
-const BACKEND_URL = 'https://swami-vivekanand-erp-backend2-13.onrender.com';
+const BACKEND_URL = 'https://swami-vivekanand-erp-backend2-17.onrender.com';
 
 // Global state for student data across all dashboard modules
 let globalStudentsData = [];
