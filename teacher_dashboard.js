@@ -1,6 +1,6 @@
 const BACKEND_URL = 'https://swami-vivekanand-erp-backend2-17.onrender.com';
 
-// Global state for student data across all dashboard modules
+// Global state for student data
 let globalStudentsData = [];
 
 // Chart Instances
@@ -9,7 +9,7 @@ let subjectChart = null;
 let individualSubjectChart = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Initialize Teacher Profile details from localStorage
+    // 1. Initialize Teacher Profile details
     const rawUser = localStorage.getItem('userData');
     let user = rawUser ? JSON.parse(rawUser) : { 
         name: "Dilip Patil", 
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (document.getElementById('assignedClassLabel')) document.getElementById('assignedClassLabel').innerText = user.class_assigned || "5th A";
     if (document.getElementById('analyticsClassLabel')) document.getElementById('analyticsClassLabel').innerText = user.class_assigned || "5th A";
 
-    // 2. Parse class and division from assigned class
+    // 2. Parse class and division
     let selectedClass = "5th";
     let selectedDiv = "A";
     if (user.class_assigned) {
@@ -54,41 +54,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchAndDisplayStudents(selectedClass, selectedDiv);
 });
 
-// Class / Division change listener callback
 async function onClassDivChange() {
     const classVal = document.getElementById('classSelect')?.value || "5th";
     const divVal = document.getElementById('divSelect')?.value || "A";
 
     const labelStr = `${classVal} ${divVal}`;
-    if (document.getElementById('assignedClassLabel')) {
-        document.getElementById('assignedClassLabel').innerText = labelStr;
-    }
-    if (document.getElementById('analyticsClassLabel')) {
-        document.getElementById('analyticsClassLabel').innerText = labelStr;
-    }
+    if (document.getElementById('assignedClassLabel')) document.getElementById('assignedClassLabel').innerText = labelStr;
+    if (document.getElementById('analyticsClassLabel')) document.getElementById('analyticsClassLabel').innerText = labelStr;
 
     await fetchAndDisplayStudents(classVal, divVal);
 }
 
-// Legacy support for single division switch calls
-async function switchDivision(divValue) {
-    if (document.getElementById('divSelect')) document.getElementById('divSelect').value = divValue;
-    await onClassDivChange();
-}
-
 async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
-    const storageKey = `studentsData_${selectedClass}_${selectedDiv}`;
-    const savedLocalData = localStorage.getItem(storageKey);
-
-    // Load local storage if present
-    if (savedLocalData) {
-        console.log("Loading saved data from LocalStorage...");
-        globalStudentsData = JSON.parse(savedLocalData);
-        renderAllViews();
-        return; 
-    }
-
-    // Fallback to API call if local storage is empty
+    // REMOVED LOCALSTORAGE CACHE so it always fetches fresh data from Supabase
     try {
         const response = await fetch(`${BACKEND_URL}/api/teacher/students?class=${selectedClass}&div=${selectedDiv}`);
         const data = await response.json();
@@ -103,36 +81,24 @@ async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
         loadFallbackData();
     }
 
-    // Cache initial load to local storage
-    saveLocalState(selectedClass, selectedDiv);
     renderAllViews();
-}
-
-function saveLocalState(selectedClass, selectedDiv) {
-    const cls = selectedClass || document.getElementById('classSelect')?.value || "5th";
-    const div = selectedDiv || document.getElementById('divSelect')?.value || "A";
-    const storageKey = `studentsData_${cls}_${div}`;
-    
-    localStorage.setItem(storageKey, JSON.stringify(globalStudentsData));
-    console.log(`Saved to local storage under key: ${storageKey}`);
 }
 
 function processStudentData(students) {
     return students.map((s, idx) => {
-        const roll = s['Roll No'] || s.roll || (idx + 1);
-        const name = s['Student Name'] || s.name || `Student ${roll}`;
-        const username = s['Username'] || s.username || `user_${roll}`;
+        const roll = s['Roll No'] || s.roll_no || (idx + 1);
+        const name = s['Student Name'] || s.student_name || `Student ${roll}`;
         const school_id = s['School ID'] || s.school_id || `SCH${100 + roll}`;
         const father_name = s['Father Name'] || s.father_name || "Parent Name";
 
-        const ut1 = s.ut1 !== undefined ? Number(s.ut1) : 15;
-        const ut2 = s.ut2 !== undefined ? Number(s.ut2) : 15;
-        const assign = s.assign !== undefined ? Number(s.assign) : 8;
-        const oral = s.oral !== undefined ? Number(s.oral) : 8;
-        const term = s.term !== undefined ? Number(s.term) : 30;
+        const ut1 = s.ut1 !== undefined && s.ut1 !== null ? Number(s.ut1) : 0;
+        const ut2 = s.ut2 !== undefined && s.ut2 !== null ? Number(s.ut2) : 0;
+        const assign = s.assign !== undefined && s.assign !== null ? Number(s.assign) : 0;
+        const oral = s.oral !== undefined && s.oral !== null ? Number(s.oral) : 0;
+        const term = s.term !== undefined && s.term !== null ? Number(s.term) : 0;
         const total = ut1 + ut2 + assign + oral + term;
 
-        const attendance = s.attendance !== undefined ? Number(s.attendance) : 85;
+        const attendance = s.attendance !== undefined && s.attendance !== null ? Number(s.attendance) : 85;
 
         const subjects = s.subjects || {
             'Mathematics': total,
@@ -145,7 +111,6 @@ function processStudentData(students) {
         return {
             'Roll No': roll,
             'Student Name': name,
-            'Username': username,
             'School ID': school_id,
             'Father Name': father_name,
             ut1, ut2, assign, oral, term, total,
@@ -157,11 +122,8 @@ function processStudentData(students) {
 
 function loadFallbackData() {
     const rawFallback = [
-        { 'Roll No': 1, 'Student Name': "Nikhil Kokate", 'Username': "nikhil123", 'School ID': "SCH484", 'Father Name': "Omkar Kokate", ut1: 18, ut2: 17, assign: 9, oral: 9, term: 35, attendance: 92 },
-        { 'Roll No': 2, 'Student Name': "Rutuparn Shinde", 'Username': "rutuparn563", 'School ID': "SCH563", 'Father Name': "Tejas Shinde", ut1: 19, ut2: 18, assign: 10, oral: 10, term: 36, attendance: 96 },
-        { 'Roll No': 3, 'Student Name': "Sarika Patil", 'Username': "sarika284", 'School ID': "SCH284", 'Father Name': "Ajinkya Patil", ut1: 15, ut2: 14, assign: 8, oral: 8, term: 28, attendance: 81 },
-        { 'Roll No': 4, 'Student Name': "Rutuja Joshi", 'Username': "rutuja468", 'School ID': "SCH468", 'Father Name': "Suraj Joshi", ut1: 7, ut2: 6, assign: 4, oral: 3, term: 12, attendance: 64 },
-        { 'Roll No': 5, 'Student Name': "Rutuparn Chougule", 'Username': "rutuparn218", 'School ID': "SCH218", 'Father Name': "Ganesh Chougule", ut1: 20, ut2: 19, assign: 10, oral: 9, term: 38, attendance: 98 }
+        { 'Roll No': 1, 'Student Name': "Nikhil Kokate", 'School ID': "SCH484", 'Father Name': "Omkar Kokate", ut1: 18, ut2: 17, assign: 9, oral: 9, term: 35, attendance: 92 },
+        { 'Roll No': 2, 'Student Name': "Rutuparn Shinde", 'School ID': "SCH563", 'Father Name': "Tejas Shinde", ut1: 19, ut2: 18, assign: 10, oral: 10, term: 36, attendance: 96 }
     ];
     globalStudentsData = processStudentData(rawFallback);
 }
@@ -203,8 +165,8 @@ function getPerformanceBadge(totalScore, attendance) {
 }
 
 function renderAttendanceAndMarksTables() {
-    const attTableBody = document.getElementById('attendanceTableBody') || document.getElementById('attendanceTable');
-    const marksTableBody = document.getElementById('marksTableBody') || document.getElementById('marksTable');
+    const attTableBody = document.getElementById('attendanceTableBody');
+    const marksTableBody = document.getElementById('marksTableBody');
 
     if (attTableBody) {
         let attHtml = '';
@@ -216,8 +178,8 @@ function renderAttendanceAndMarksTables() {
                 <tr data-roll="${roll}">
                     <td>${roll}</td>
                     <td>${name}</td>
-                    <td><input type="radio" name="att_${roll}" value="Present" class="att-radio attendance-checkbox" ${isPresent ? 'checked' : ''}></td>
-                    <td><input type="radio" name="att_${roll}" value="Absent" class="att-radio attendance-checkbox" ${!isPresent ? 'checked' : ''}></td>
+                    <td><input type="radio" name="att_${roll}" value="Present" class="att-radio" ${isPresent ? 'checked' : ''}></td>
+                    <td><input type="radio" name="att_${roll}" value="Absent" class="att-radio" ${!isPresent ? 'checked' : ''}></td>
                     <td><strong class="attendance-value">${s.attendance}%</strong></td>
                 </tr>`;
         });
@@ -281,12 +243,8 @@ function showSection(id, btn) {
     if (targetSection) targetSection.classList.add('active');
     if (btn) btn.classList.add('active');
 
-    if (id === 'analyticsSec') {
-        handleAnalyticsViewChange();
-    }
+    if (id === 'analyticsSec') handleAnalyticsViewChange();
 }
-
-function renderAnalyticsCharts() { handleAnalyticsViewChange(); }
 
 function renderClassAnalyticsCharts() {
     if (!globalStudentsData || globalStudentsData.length === 0) return;
@@ -321,6 +279,9 @@ function renderClassAnalyticsCharts() {
     if (document.getElementById('classTopper')) document.getElementById('classTopper').innerText = topperName;
     if (document.getElementById('failCount')) document.getElementById('failCount').innerText = `${failClass} Students`;
 
+    // Real Math Subject Average
+    const mathAvg = globalStudentsData.reduce((sum, s) => sum + (s.subjects['Mathematics'] || 0), 0) / totalStudents || 0;
+
     const marksCtx = document.getElementById('marksDistributionChart');
     if (marksCtx && typeof Chart !== 'undefined') {
         if (marksChart) marksChart.destroy();
@@ -328,10 +289,7 @@ function renderClassAnalyticsCharts() {
             type: 'doughnut',
             data: {
                 labels: ['Distinction', 'First Class', 'Pass Class', 'Needs Support'],
-                datasets: [{
-                    data: [distinction, firstClass, passClass, failClass],
-                    backgroundColor: ['#006633', '#0055a5', '#f39c12', '#c0392b']
-                }]
+                datasets: [{ data: [distinction, firstClass, passClass, failClass], backgroundColor: ['#006633', '#0055a5', '#f39c12', '#c0392b'] }]
             },
             options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
         });
@@ -343,12 +301,8 @@ function renderClassAnalyticsCharts() {
         subjectChart = new Chart(subjCtx.getContext('2d'), {
             type: 'bar',
             data: {
-                labels: ['Mathematics', 'English', 'Science', 'Hindi', 'Marathi'],
-                datasets: [{
-                    label: 'Class Average (%)',
-                    data: [78, 65, 72, 80, 84],
-                    backgroundColor: '#003366'
-                }]
+                labels: ['Mathematics'],
+                datasets: [{ label: 'Class Average (%)', data: [mathAvg.toFixed(1)], backgroundColor: '#003366' }]
             },
             options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
         });
@@ -391,11 +345,7 @@ function renderIndividualStudentAnalytics(rollNo) {
             type: 'bar',
             data: {
                 labels: subjectLabels,
-                datasets: [{
-                    label: 'Marks Obtained',
-                    data: subjectMarks,
-                    backgroundColor: subjectMarks.map(m => m >= 35 ? '#0055a5' : '#dc3545')
-                }]
+                datasets: [{ label: 'Marks Obtained', data: subjectMarks, backgroundColor: subjectMarks.map(m => m >= 35 ? '#0055a5' : '#dc3545') }]
             },
             options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
         });
@@ -460,18 +410,9 @@ async function submitAttendance(e) {
         const selectedRadio = document.querySelector(`input[name="att_${roll}"]:checked`);
         const status = selectedRadio ? selectedRadio.value : "Present";
         
-        if (status === "Absent") {
-            s.attendance = Math.max(0, s.attendance - 2); 
-        } else {
-            s.attendance = Math.min(100, s.attendance + 1);
-        }
-
-        // Backend expects 'roll_no', 'status', and 'attendance'
-        records.push({ roll_no: roll, status: status, attendance: s.attendance });
+        // We don't change attendance percentage locally, we let the backend calculate it
+        records.push({ roll_no: roll, status: status });
     });
-
-    // Save to LocalStorage
-    saveLocalState(selectedClass, selectedDiv);
 
     try {
         const res = await fetch(`${BACKEND_URL}/api/teacher/attendance`, {
@@ -479,23 +420,22 @@ async function submitAttendance(e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 class: selectedClass, 
-                div: selectedDiv,       // FIXED: Changed 'division' to 'div'
+                div: selectedDiv,       // FIXED
                 date: attDate, 
-                attendance: records     // FIXED: Changed 'records' to 'attendance'
+                attendance: records     // FIXED
             })
         });
         const data = await res.json();
         if (data.success) {
             alert(`Attendance saved permanently for ${selectedClass} ${selectedDiv}!`);
+            await fetchAndDisplayStudents(selectedClass, selectedDiv); // Refresh fresh data
         } else {
             alert('Save failed: ' + (data.message || 'unknown error'));
         }
     } catch (err) {
         console.warn("API Sync failed:", err);
-        alert("Failed to connect to server. Check internet.");
+        alert("Failed to connect to server.");
     }
-
-    renderStudentTable();
 }
 
 async function saveMarks(e) {
@@ -505,7 +445,7 @@ async function saveMarks(e) {
     const selectedDiv = document.getElementById('divSelect')?.value || "A";
     const subject = document.getElementById('subjSelect')?.value || "Mathematics";
 
-    const rows = document.querySelectorAll('#marksTableBody tr, #marksTable tr');
+    const rows = document.querySelectorAll('#marksTableBody tr');
     const marks = [];
 
     rows.forEach(row => {
@@ -517,46 +457,32 @@ async function saveMarks(e) {
         const assign = Number(row.querySelector('.input-assign')?.value || 0);
         const oral = Number(row.querySelector('.input-oral')?.value || 0);
         const term = Number(row.querySelector('.input-term')?.value || 0);
-        const total = ut1 + ut2 + assign + oral + term;
-
-        const st = globalStudentsData.find(item => item['Roll No'] === roll);
-        if (st) {
-            st.ut1 = ut1; st.ut2 = ut2; st.assign = assign;
-            st.oral = oral; st.term = term; st.total = total;
-            if (!st.subjects) st.subjects = {};
-            st.subjects[subject] = total;
-        }
 
         marks.push({ roll_no: roll, ut1, ut2, assign, oral, term });
     });
 
-    // 1. Write to local database
-    saveLocalState(selectedClass, selectedDiv);
-
-    // 2. Background API Push
     try {
         const res = await fetch(`${BACKEND_URL}/api/teacher/marks`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 class: selectedClass, 
-                div: selectedDiv,      // FIXED: Changed 'division' to 'div'
+                div: selectedDiv,      // FIXED
                 subject: subject, 
-                marks: marks           // FIXED: Sending the mapped marks array, not the whole global object
+                marks: marks           // FIXED
             })
         });
         const data = await res.json();
         if (data.success) {
             alert(`Marks for ${subject} saved successfully!`);
+            await fetchAndDisplayStudents(selectedClass, selectedDiv); // Refresh fresh data
         } else {
             alert('Save failed: ' + (data.message || 'unknown error'));
         }
     } catch (err) {
         console.warn("API Sync failed:", err);
-        alert("Failed to connect to server. Check internet.");
+        alert("Failed to connect to server.");
     }
-
-    renderStudentTable();
 }
 
 // AI Assistant Widget Logic
@@ -573,7 +499,6 @@ async function sendChat() {
     appendMsg(msg, 'user');
     input.value = '';
 
-    // Show loading bubble
     const chatBody = document.getElementById('chatBody');
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'chat-msg bot';
@@ -586,12 +511,8 @@ async function sendChat() {
     try { userObj = JSON.parse(localStorage.getItem('userData') || '{}'); } catch (e) { userObj = {}; }
     const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
 
-    // Build the context so Gemini knows the class stats and students
-    const studentStats = globalStudentsData.map(s => ({ name: s['Student Name'], total: s.total, attendance: s.attendance }))
-        .sort((a, b) => b.total - a.total);
-    const classAverage = globalStudentsData.length > 0 
-        ? (globalStudentsData.reduce((sum, s) => sum + s.total, 0) / globalStudentsData.length).toFixed(1) 
-        : 0;
+    const studentStats = globalStudentsData.map(s => ({ name: s['Student Name'], total: s.total, attendance: s.attendance })).sort((a, b) => b.total - a.total);
+    const classAverage = globalStudentsData.length > 0 ? (globalStudentsData.reduce((sum, s) => sum + s.total, 0) / globalStudentsData.length).toFixed(1) : 0;
 
     const context = {
         teacher_info: userObj,
@@ -606,26 +527,17 @@ async function sendChat() {
         const res = await fetch(`${BACKEND_URL}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                role: 'teacher',
-                message: msg,
-                lang: lang,
-                user: userObj,
-                context: context
-            })
+            body: JSON.stringify({ role: 'teacher', message: msg, lang: lang, user: userObj, context: context })
         });
         const data = await res.json();
         const lb = document.getElementById('loadingBubble');
         if (lb) lb.remove();
-        
         const reply = (data && data.reply) ? data.reply : 'Sorry, no reply received.';
         appendMsg(reply.replace(/\n/g, '<br>'), 'bot');
     } catch (err) {
         const lb = document.getElementById('loadingBubble');
         if (lb) lb.remove();
-        const errMsg = lang === 'mr'
-            ? 'क्षमस्व, एआय सहाय्यक सध्या उपलब्ध नाही. कृपया ६० सेकंद थांबा आणि पुन्हा प्रयत्न करा.'
-            : 'Sorry, the AI assistant is temporarily unavailable. Please wait 60 seconds and try again.';
+        const errMsg = lang === 'mr' ? 'क्षमस्व, एआय सहाय्यक सध्या उपलब्ध नाही. कृपया ६० सेकंद थांबा.' : 'Sorry, AI temporarily unavailable. Please wait 60s.';
         appendMsg(errMsg, 'bot');
     }
 }
