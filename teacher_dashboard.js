@@ -445,7 +445,7 @@ function closeAnalyticsModal() {
 }
 
 // ==========================================
-// DATA SUBMISSION & PERMANENT LOCAL SAVING
+// DATA SUBMISSION (NOW SAVING TO DATABASE)
 // ==========================================
 async function submitAttendance(e) {
     if (e && e.preventDefault) e.preventDefault();
@@ -466,24 +466,35 @@ async function submitAttendance(e) {
             s.attendance = Math.min(100, s.attendance + 1);
         }
 
-        records.push({ roll_no: roll, student_name: s['Student Name'], status: status });
+        // Backend expects 'roll_no', 'status', and 'attendance'
+        records.push({ roll_no: roll, status: status, attendance: s.attendance });
     });
 
     // Save to LocalStorage
     saveLocalState(selectedClass, selectedDiv);
 
-    // Optional API Sync
     try {
-        await fetch(`${BACKEND_URL}/api/teacher/attendance`, {
+        const res = await fetch(`${BACKEND_URL}/api/teacher/attendance`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ class: selectedClass, division: selectedDiv, date: attDate, records: records })
+            body: JSON.stringify({ 
+                class: selectedClass, 
+                div: selectedDiv,       // FIXED: Changed 'division' to 'div'
+                date: attDate, 
+                attendance: records     // FIXED: Changed 'records' to 'attendance'
+            })
         });
+        const data = await res.json();
+        if (data.success) {
+            alert(`Attendance saved permanently for ${selectedClass} ${selectedDiv}!`);
+        } else {
+            alert('Save failed: ' + (data.message || 'unknown error'));
+        }
     } catch (err) {
-        console.warn("API Sync skipped/failed:", err);
+        console.warn("API Sync failed:", err);
+        alert("Failed to connect to server. Check internet.");
     }
 
-    alert(`Attendance saved permanently for ${selectedClass} ${selectedDiv}!`);
     renderStudentTable();
 }
 
@@ -495,6 +506,7 @@ async function saveMarks(e) {
     const subject = document.getElementById('subjSelect')?.value || "Mathematics";
 
     const rows = document.querySelectorAll('#marksTableBody tr, #marksTable tr');
+    const marks = [];
 
     rows.forEach(row => {
         const roll = Number(row.getAttribute('data-roll'));
@@ -509,16 +521,13 @@ async function saveMarks(e) {
 
         const st = globalStudentsData.find(item => item['Roll No'] === roll);
         if (st) {
-            st.ut1 = ut1; 
-            st.ut2 = ut2; 
-            st.assign = assign;
-            st.oral = oral; 
-            st.term = term;
-            st.total = total;
-            
+            st.ut1 = ut1; st.ut2 = ut2; st.assign = assign;
+            st.oral = oral; st.term = term; st.total = total;
             if (!st.subjects) st.subjects = {};
             st.subjects[subject] = total;
         }
+
+        marks.push({ roll_no: roll, ut1, ut2, assign, oral, term });
     });
 
     // 1. Write to local database
@@ -526,16 +535,27 @@ async function saveMarks(e) {
 
     // 2. Background API Push
     try {
-        await fetch(`${BACKEND_URL}/api/teacher/marks`, {
+        const res = await fetch(`${BACKEND_URL}/api/teacher/marks`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ class: selectedClass, division: selectedDiv, subject: subject, marks: globalStudentsData })
+            body: JSON.stringify({ 
+                class: selectedClass, 
+                div: selectedDiv,      // FIXED: Changed 'division' to 'div'
+                subject: subject, 
+                marks: marks           // FIXED: Sending the mapped marks array, not the whole global object
+            })
         });
+        const data = await res.json();
+        if (data.success) {
+            alert(`Marks for ${subject} saved successfully!`);
+        } else {
+            alert('Save failed: ' + (data.message || 'unknown error'));
+        }
     } catch (err) {
-        console.warn("API Sync skipped/failed:", err);
+        console.warn("API Sync failed:", err);
+        alert("Failed to connect to server. Check internet.");
     }
 
-    alert(`Marks for ${subject} saved successfully!`);
     renderStudentTable();
 }
 
@@ -545,7 +565,7 @@ function toggleChat() {
     if (win) win.style.display = (win.style.display === 'flex' || win.style.display === 'block') ? 'none' : 'flex';
 }
 
-function sendChat() {
+async function sendChat() {
     const input = document.getElementById('chatInput');
     const msg = input ? input.value.trim() : '';
     if (!msg) return;
@@ -553,34 +573,61 @@ function sendChat() {
     appendMsg(msg, 'user');
     input.value = '';
 
-    let response = "";
-    const q = msg.toLowerCase();
+    // Show loading bubble
+    const chatBody = document.getElementById('chatBody');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'chat-msg bot';
+    loadingDiv.id = 'loadingBubble';
+    loadingDiv.innerHTML = '...';
+    chatBody.appendChild(loadingDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
 
-    const studentStats = globalStudentsData.map(s => ({ name: s['Student Name'], total: s.total }))
+    let userObj = {};
+    try { userObj = JSON.parse(localStorage.getItem('userData') || '{}'); } catch (e) { userObj = {}; }
+    const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+
+    // Build the context so Gemini knows the class stats and students
+    const studentStats = globalStudentsData.map(s => ({ name: s['Student Name'], total: s.total, attendance: s.attendance }))
         .sort((a, b) => b.total - a.total);
+    const classAverage = globalStudentsData.length > 0 
+        ? (globalStudentsData.reduce((sum, s) => sum + s.total, 0) / globalStudentsData.length).toFixed(1) 
+        : 0;
 
-    if (q.includes("attendance") || q.includes("how to mark")) {
-        response = "To mark attendance, navigate to 'Mark Attendance' in the left menu, select status options, and click 'Submit Attendance'.";
-    } else if (q.includes("top three") || q.includes("top 3") || q.includes("topper")) {
-        const top3 = studentStats.slice(0, 3);
-        response = "<b>Top Performing Students:</b><br>" + top3.map((s, idx) => `${idx + 1}. ${s.name} (${s.total}/100)`).join('<br>');
-    } else if (q.includes("fail") || q.includes("failed")) {
-        const failed = studentStats.filter(s => s.total < 35);
-        if (failed.length > 0) {
-            response = "<b>Students Needing Support (<35%):</b><br>" + failed.map((s, idx) => `${idx + 1}. ${s.name} (${s.total}/100)`).join('<br>');
-        } else {
-            response = "Great news! All students in this class have passing scores.";
-        }
-    } else if (q.includes("pass") || q.includes("passed") || q.includes("how many")) {
-        const total = studentStats.length;
-        const passed = studentStats.filter(s => s.total >= 35).length;
-        const passRate = total > 0 ? ((passed / total) * 100).toFixed(1) : 0;
-        response = `<b>Class Pass Statistics:</b><br>Total Students: ${total}<br>Passed: ${passed} (${passRate}%)<br>Needs Support: ${total - passed}`;
-    } else {
-        response = "I am your AI assistant. Ask me about class attendance, toppers, overall class pass performance, or failed student statistics.";
+    const context = {
+        teacher_info: userObj,
+        class_average_score: classAverage,
+        total_students: globalStudentsData.length,
+        top_students: studentStats.slice(0, 3),
+        failed_students: studentStats.filter(s => s.total < 35),
+        full_student_list: studentStats
+    };
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                role: 'teacher',
+                message: msg,
+                lang: lang,
+                user: userObj,
+                context: context
+            })
+        });
+        const data = await res.json();
+        const lb = document.getElementById('loadingBubble');
+        if (lb) lb.remove();
+        
+        const reply = (data && data.reply) ? data.reply : 'Sorry, no reply received.';
+        appendMsg(reply.replace(/\n/g, '<br>'), 'bot');
+    } catch (err) {
+        const lb = document.getElementById('loadingBubble');
+        if (lb) lb.remove();
+        const errMsg = lang === 'mr'
+            ? 'क्षमस्व, एआय सहाय्यक सध्या उपलब्ध नाही. कृपया ६० सेकंद थांबा आणि पुन्हा प्रयत्न करा.'
+            : 'Sorry, the AI assistant is temporarily unavailable. Please wait 60 seconds and try again.';
+        appendMsg(errMsg, 'bot');
     }
-
-    setTimeout(() => appendMsg(response, 'bot'), 400);
 }
 
 function appendMsg(text, type) {
