@@ -6,43 +6,54 @@
     <title>Swami Vivekanand School ERP</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Language Toggle Button Positioning */
+        /* Sidebar-style Language Toggle (Matching the yellow button in your image) */
         .lang-toggle-wrapper {
             position: fixed;
             top: 20px;
-            right: 20px;
+            left: 20px; /* Moved to top-left to match typical sidebar designs */
             z-index: 1000;
         }
 
         .btn-lang-toggle {
-            background-color: #ffffff;
-            color: #1a365d;
-            border: 2px solid #1a365d;
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: 700;
-            border-radius: 20px;
+            background-color: #ffcc00; /* Yellow background */
+            color: #003366; /* Dark blue text */
+            border: none;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 800;
+            border-radius: 6px; /* Slightly rounded corners */
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease-in-out;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
 
         .btn-lang-toggle:hover {
-            background-color: #1a365d;
-            color: #ffffff;
-            transform: translateY(-1px);
+            background-color: #e6b800; /* Slightly darker yellow on hover */
+            transform: translateY(-2px);
+        }
+
+        /* Adjusting page styles for a cleaner login look */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f8fb;
+        }
+
+        /* Optional: If you want to move the brand title down slightly to make room for the button */
+        .brand {
+            margin-top: 40px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Language Toggle Button (Top Right Corner) -->
+    <!-- New Yellow Language Toggle Button -->
     <div class="lang-toggle-wrapper">
         <button type="button" id="langToggleBtn" class="btn-lang-toggle" onclick="toggleLanguage()">
-            🌐 English
+            <span id="langBtnText">English मध्ये बदला</span>
         </button>
     </div>
 
@@ -134,6 +145,26 @@
     </main>
 
     <script src="login.js"></script>
+
+    <!-- Small script to handle the text inside the yellow button -->
+    <script>
+        // We override the text change so the button says "English" or "मराठी" properly
+        const originalToggle = window.toggleLanguage;
+        window.toggleLanguage = function() {
+            if (originalToggle) originalToggle();
+            
+            // Change the text inside our new yellow button
+            const btnText = document.getElementById('langBtnText');
+            if (btnText) {
+                // If the page is now in English, show "मराठी मध्ये बदला". Otherwise show "English मध्ये बदला"
+                if (document.documentElement.lang === 'en') {
+                    btnText.innerText = "मराठी मध्ये बदला";
+                } else {
+                    btnText.innerText = "English मध्ये बदला";
+                }
+            }
+        };
+    </script>
 
 </body>
 </html>
