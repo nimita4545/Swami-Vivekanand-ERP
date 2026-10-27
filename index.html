@@ -26,7 +26,7 @@
         }
 
         /* =========================================
-           BACKGROUND SHAPES (Modern gradient blobs)
+           BACKGROUND SHAPES
            ========================================= */
         .background-shape {
             position: absolute;
@@ -81,7 +81,7 @@
         }
 
         /* =========================================
-           MAIN LAYOUT (Split Screen)
+           MAIN LAYOUT
            ========================================= */
         .page {
             display: flex;
@@ -108,15 +108,31 @@
             padding: 40px;
         }
 
-        .logo-wrap img {
-            width: 120px;
-            height: 120px;
+        /* =========================================
+           NEW SCHOOL LOGO STYLING
+           ========================================= */
+        .logo-wrapper {
+            width: 130px;
+            height: 130px;
+            margin: 0 auto 25px auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid #ffffff;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            padding: 5px;
+        }
+
+        .logo-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 50%;
+            background-color: #ffffff; /* Gives a white background behind transparent logos */
         }
 
         .brand-content h1 {
@@ -124,12 +140,14 @@
             font-weight: 700;
             margin-bottom: 8px;
             letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .brand-content p {
             font-size: 1.1rem;
             color: #d9e6f2;
             font-weight: 300;
+            letter-spacing: 1px;
         }
 
         /* Right Side - Login Form */
@@ -263,7 +281,7 @@
         }
 
         /* =========================================
-           RESPONSIVE DESIGN (Mobile View)
+           RESPONSIVE DESIGN
            ========================================= */
         @media (max-width: 900px) {
             .page {
@@ -275,9 +293,10 @@
                 padding: 40px 20px;
             }
 
-            .logo-wrap img {
-                width: 90px;
-                height: 90px;
+            .logo-wrapper {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 15px;
             }
 
             .brand-content h1 {
@@ -314,13 +333,16 @@
 
     <main class="page">
 
-        <!-- Left Side: Branding -->
+        <!-- Left Side: Branding with Logo -->
         <section class="brand-section">
             <div class="brand-content">
-                <div class="logo-wrap">
-                    <!-- Make sure your logo image is named exactly this -->
-                    <img src="education-logo.jpg" alt="Education Logo">
+                
+                <!-- SCHOOL LOGO -->
+                <div class="logo-wrapper">
+                    <!-- IMPORTANT: Make sure your image file is named 'logo.png' and is in the same folder -->
+                    <img src="logo.png" alt="Swami Vivekanand School Logo">
                 </div>
+                
                 <h1>स्वामी विवेकानंद</h1>
                 <p data-i18n="subtitle">शाळा ईआरपी प्रणाली</p>
             </div>
@@ -384,7 +406,6 @@
 
     <script src="login.js"></script>
 
-    <!-- Script to handle the language button text -->
     <script>
         const originalToggle = window.toggleLanguage;
         window.toggleLanguage = function() {
