@@ -4,159 +4,394 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swami Vivekanand School ERP</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for modern typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        /* Sidebar-style Language Toggle (Matching the yellow button in your image) */
+        /* =========================================
+           RESET & GLOBAL
+           ========================================= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* =========================================
+           BACKGROUND SHAPES (Modern gradient blobs)
+           ========================================= */
+        .background-shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+        }
+
+        .shape-1 {
+            width: 600px;
+            height: 600px;
+            background: rgba(0, 51, 102, 0.15);
+            top: -150px;
+            left: -100px;
+        }
+
+        .shape-2 {
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 204, 0, 0.15);
+            bottom: -100px;
+            right: 20%;
+        }
+
+        /* =========================================
+           LANGUAGE TOGGLE BUTTON (Top Right)
+           ========================================= */
         .lang-toggle-wrapper {
             position: fixed;
-            top: 20px;
-            left: 20px; /* Moved to top-left to match typical sidebar designs */
+            top: 25px;
+            right: 30px;
             z-index: 1000;
         }
 
         .btn-lang-toggle {
-            background-color: #ffcc00; /* Yellow background */
-            color: #003366; /* Dark blue text */
+            background-color: #ffcc00;
+            color: #003366;
             border: none;
-            padding: 12px 24px;
-            font-size: 15px;
-            font-weight: 800;
-            border-radius: 6px; /* Slightly rounded corners */
+            padding: 10px 22px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            transition: all 0.2s ease-in-out;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            box-shadow: 0 4px 15px rgba(255, 204, 0, 0.3);
+            transition: all 0.3s ease;
         }
 
         .btn-lang-toggle:hover {
-            background-color: #e6b800; /* Slightly darker yellow on hover */
+            background-color: #e6b800;
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 204, 0, 0.4);
         }
 
-        /* Adjusting page styles for a cleaner login look */
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f8fb;
+        /* =========================================
+           MAIN LAYOUT (Split Screen)
+           ========================================= */
+        .page {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
         }
 
-        /* Optional: If you want to move the brand title down slightly to make room for the button */
-        .brand {
-            margin-top: 40px;
+        /* Left Side - Branding */
+        .brand-section {
+            flex: 1;
+            background: linear-gradient(135deg, #003366 0%, #0055a5 100%);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-top-right-radius: 50px;
+            border-bottom-right-radius: 50px;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+        }
+
+        .brand-content {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .logo-wrap img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #ffffff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+
+        .brand-content h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .brand-content p {
+            font-size: 1.1rem;
+            color: #d9e6f2;
+            font-weight: 300;
+        }
+
+        /* Right Side - Login Form */
+        .login-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .login-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 51, 102, 0.1);
+        }
+
+        .login-card h2 {
+            color: #003366;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .welcome-text {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        /* Form Inputs */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #003366;
+            margin-bottom: 8px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1.5px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #333;
+            background-color: #f9fbfd;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #0055a5;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(0, 85, 165, 0.1);
+        }
+
+        /* Role Selection */
+        .role-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #003366;
+            margin-bottom: 10px;
+        }
+
+        .roles {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .role {
+            flex: 1;
+            padding: 10px;
+            background: #f0f6fb;
+            border: 1.5px solid #e1e8ed;
+            border-radius: 8px;
+            color: #555;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .role:hover {
+            background: #e6f0fa;
+        }
+
+        .role.active {
+            background: #003366;
+            color: #ffffff;
+            border-color: #003366;
+            box-shadow: 0 4px 10px rgba(0, 51, 102, 0.2);
+        }
+
+        /* Login Button */
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: #0055a5;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: #003366;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 51, 102, 0.2);
+        }
+
+        /* Error Message */
+        .message {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        /* =========================================
+           RESPONSIVE DESIGN (Mobile View)
+           ========================================= */
+        @media (max-width: 900px) {
+            .page {
+                flex-direction: column;
+            }
+
+            .brand-section {
+                border-radius: 0 0 30px 30px;
+                padding: 40px 20px;
+            }
+
+            .logo-wrap img {
+                width: 90px;
+                height: 90px;
+            }
+
+            .brand-content h1 {
+                font-size: 2rem;
+            }
+
+            .login-section {
+                padding: 20px;
+            }
+
+            .login-card {
+                padding: 30px;
+            }
+
+            .lang-toggle-wrapper {
+                top: 15px;
+                right: 15px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- New Yellow Language Toggle Button -->
+    <!-- Language Toggle Button (Top Right) -->
     <div class="lang-toggle-wrapper">
         <button type="button" id="langToggleBtn" class="btn-lang-toggle" onclick="toggleLanguage()">
             <span id="langBtnText">English मध्ये बदला</span>
         </button>
     </div>
 
-    <div class="background"></div>
-    <div class="overlay"></div>
+    <!-- Background Elements -->
+    <div class="background-shape shape-1"></div>
+    <div class="background-shape shape-2"></div>
 
     <main class="page">
 
-        <header class="brand">
-            <h1>स्वामी विवेकानंद</h1>
-            <p data-i18n="subtitle">शाळा ईआरपी प्रणाली</p>
-        </header>
-
-        <section class="login-card">
-
-            <div class="logo-wrap">
-                <img src="education-logo.jpg" alt="Education Logo">
+        <!-- Left Side: Branding -->
+        <section class="brand-section">
+            <div class="brand-content">
+                <div class="logo-wrap">
+                    <!-- Make sure your logo image is named exactly this -->
+                    <img src="education-logo.jpg" alt="Education Logo">
+                </div>
+                <h1>स्वामी विवेकानंद</h1>
+                <p data-i18n="subtitle">शाळा ईआरपी प्रणाली</p>
             </div>
+        </section>
 
-            <h2 data-i18n="login_title">लॉगिन</h2>
+        <!-- Right Side: Login Card -->
+        <section class="login-section">
+            <div class="login-card">
+                <h2 data-i18n="login_title">लॉगिन</h2>
+                <p class="welcome-text">Welcome back! Please login to your account.</p>
 
-            <form id="loginForm">
+                <form id="loginForm">
+                    <div class="input-group">
+                        <label for="username" data-i18n="lbl_username">वापरकर्ता नाव (Username)</label>
+                        <input
+                            type="text"
+                            id="username"
+                            placeholder="वापरकर्ता नाव प्रविष्ट करा"
+                            data-i18n-placeholder="ph_username"
+                            required
+                        >
+                    </div>
 
-                <label for="username" data-i18n="lbl_username">वापरकर्ता नाव (Username)</label>
-                <input
-                    type="text"
-                    id="username"
-                    placeholder="वापरकर्ता नाव प्रविष्ट करा"
-                    data-i18n-placeholder="ph_username"
-                    required
-                >
+                    <div class="input-group">
+                        <label for="password" data-i18n="lbl_password">पासवर्ड (Password)</label>
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="पासवर्ड प्रविष्ट करा"
+                            data-i18n-placeholder="ph_password"
+                            required
+                        >
+                    </div>
 
-                <label for="password" data-i18n="lbl_password">पासवर्ड (Password)</label>
-                <input
-                    type="password"
-                    id="password"
-                    placeholder="पासवर्ड प्रविष्ट करा"
-                    data-i18n-placeholder="ph_password"
-                    required
-                >
+                    <div class="role-title" data-i18n="role_title">
+                        या नात्याने लॉगिन करा
+                    </div>
 
-                <div class="role-title" data-i18n="role_title">
-                    या नात्याने लॉगिन करा
-                </div>
+                    <div class="roles">
+                        <button type="button" class="role active" data-role="student" data-i18n="role_student">
+                            विद्यार्थी
+                        </button>
+                        <button type="button" class="role" data-role="teacher" data-i18n="role_teacher">
+                            शिक्षक
+                        </button>
+                        <button type="button" class="role" data-role="admin" data-i18n="role_admin">
+                            प्रशासक
+                        </button>
+                    </div>
 
-                <div class="roles">
-                    <button
-                        type="button"
-                        class="role active"
-                        data-role="student"
-                        data-i18n="role_student"
-                    >
-                        विद्यार्थी
+                    <button class="login-btn" type="submit" data-i18n="btn_login">
+                        लॉगिन करा
                     </button>
 
-                    <button
-                        type="button"
-                        class="role"
-                        data-role="teacher"
-                        data-i18n="role_teacher"
-                    >
-                        शिक्षक
-                    </button>
-
-                    <button
-                        type="button"
-                        class="role"
-                        data-role="admin"
-                        data-i18n="role_admin"
-                    >
-                        प्रशासक (Admin)
-                    </button>
-                </div>
-
-                <button
-                    class="login-btn"
-                    type="submit"
-                    data-i18n="btn_login"
-                >
-                    लॉगिन करा
-                </button>
-
-                <p id="message" class="message"></p>
-
-            </form>
-
+                    <p id="message" class="message"></p>
+                </form>
+            </div>
         </section>
 
     </main>
 
     <script src="login.js"></script>
 
-    <!-- Small script to handle the text inside the yellow button -->
+    <!-- Script to handle the language button text -->
     <script>
-        // We override the text change so the button says "English" or "मराठी" properly
         const originalToggle = window.toggleLanguage;
         window.toggleLanguage = function() {
             if (originalToggle) originalToggle();
             
-            // Change the text inside our new yellow button
             const btnText = document.getElementById('langBtnText');
             if (btnText) {
-                // If the page is now in English, show "मराठी मध्ये बदला". Otherwise show "English मध्ये बदला"
                 if (document.documentElement.lang === 'en') {
                     btnText.innerText = "मराठी मध्ये बदला";
                 } else {
