@@ -71,7 +71,13 @@ async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
         const data = await response.json();
 
         if (response.ok && data.success && data.students && data.students.length > 0) {
-            globalStudentsData = processStudentData(data.students);
+            // First process the data
+            let processedData = processStudentData(data.students);
+            
+            // 🔥 SORT THE STUDENTS BY ROLL NO 🔥
+            processedData.sort((a, b) => Number(a['Roll No']) - Number(b['Roll No']));
+            
+            globalStudentsData = processedData;
         } else {
             loadFallbackData();
         }
@@ -280,7 +286,7 @@ function renderClassAnalyticsCharts() {
 }
 
 function renderIndividualStudentAnalytics(rollNo) {
-    const student = globalStudentsData.find(s => s['Roll No'] === rollNo);
+    const student = globalStudentsData.find(s => Number(s['Roll No']) === Number(rollNo));
     if (!student) return;
 
     if (document.getElementById('indStudentName')) document.getElementById('indStudentName').innerText = student['Student Name'];
@@ -314,7 +320,7 @@ function renderIndividualStudentAnalytics(rollNo) {
 }
 
 function openStudentModal(rollNo) {
-    const student = globalStudentsData.find(s => s['Roll No'] === rollNo);
+    const student = globalStudentsData.find(s => Number(s['Roll No']) === Number(rollNo));
     if (!student) return;
 
     if (document.getElementById('modalStudentName')) document.getElementById('modalStudentName').innerText = student['Student Name'];
