@@ -66,7 +66,6 @@ async function onClassDivChange() {
 }
 
 async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
-    // REMOVED LOCALSTORAGE CACHE so it always fetches fresh data from Supabase
     try {
         const response = await fetch(`${BACKEND_URL}/api/teacher/students?class=${selectedClass}&div=${selectedDiv}`);
         const data = await response.json();
@@ -80,7 +79,6 @@ async function fetchAndDisplayStudents(selectedClass, selectedDiv) {
         console.error('Error loading students from API:', error);
         loadFallbackData();
     }
-
     renderAllViews();
 }
 
@@ -101,21 +99,12 @@ function processStudentData(students) {
         const attendance = s.attendance !== undefined && s.attendance !== null ? Number(s.attendance) : 85;
 
         const subjects = s.subjects || {
-            'Mathematics': total,
-            'English': total,
-            'Science': total,
-            'Hindi': total,
-            'Marathi': total
+            'Mathematics': total, 'English': total, 'Science': total, 'Hindi': total, 'Marathi': total
         };
 
         return {
-            'Roll No': roll,
-            'Student Name': name,
-            'School ID': school_id,
-            'Father Name': father_name,
-            ut1, ut2, assign, oral, term, total,
-            attendance,
-            subjects
+            'Roll No': roll, 'Student Name': name, 'School ID': school_id, 'Father Name': father_name,
+            ut1, ut2, assign, oral, term, total, attendance, subjects
         };
     });
 }
@@ -238,11 +227,9 @@ function handleAnalyticsViewChange() {
 function showSection(id, btn) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    
     const targetSection = document.getElementById(id);
     if (targetSection) targetSection.classList.add('active');
     if (btn) btn.classList.add('active');
-
     if (id === 'analyticsSec') handleAnalyticsViewChange();
 }
 
@@ -250,23 +237,13 @@ function renderClassAnalyticsCharts() {
     if (!globalStudentsData || globalStudentsData.length === 0) return;
 
     let distinction = 0, firstClass = 0, passClass = 0, failClass = 0;
-    let totalScoreSum = 0;
-    let highestScore = -1;
-    let topperName = "-";
+    let totalScoreSum = 0, highestScore = -1, topperName = "-";
 
     globalStudentsData.forEach(s => {
         const total = s.total;
         totalScoreSum += total;
-
-        if (total > highestScore) {
-            highestScore = total;
-            topperName = `${s['Student Name']} (${total})`;
-        }
-
-        if (total >= 75) distinction++;
-        else if (total >= 60) firstClass++;
-        else if (total >= 35) passClass++;
-        else failClass++;
+        if (total > highestScore) { highestScore = total; topperName = `${s['Student Name']} (${total})`; }
+        if (total >= 75) distinction++; else if (total >= 60) firstClass++; else if (total >= 35) passClass++; else failClass++;
     });
 
     const totalStudents = globalStudentsData.length;
@@ -279,7 +256,6 @@ function renderClassAnalyticsCharts() {
     if (document.getElementById('classTopper')) document.getElementById('classTopper').innerText = topperName;
     if (document.getElementById('failCount')) document.getElementById('failCount').innerText = `${failClass} Students`;
 
-    // Real Math Subject Average
     const mathAvg = globalStudentsData.reduce((sum, s) => sum + (s.subjects['Mathematics'] || 0), 0) / totalStudents || 0;
 
     const marksCtx = document.getElementById('marksDistributionChart');
@@ -287,10 +263,7 @@ function renderClassAnalyticsCharts() {
         if (marksChart) marksChart.destroy();
         marksChart = new Chart(marksCtx.getContext('2d'), {
             type: 'doughnut',
-            data: {
-                labels: ['Distinction', 'First Class', 'Pass Class', 'Needs Support'],
-                datasets: [{ data: [distinction, firstClass, passClass, failClass], backgroundColor: ['#006633', '#0055a5', '#f39c12', '#c0392b'] }]
-            },
+            data: { labels: ['Distinction', 'First Class', 'Pass Class', 'Needs Support'], datasets: [{ data: [distinction, firstClass, passClass, failClass], backgroundColor: ['#006633', '#0055a5', '#f39c12', '#c0392b'] }] },
             options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
         });
     }
@@ -300,10 +273,7 @@ function renderClassAnalyticsCharts() {
         if (subjectChart) subjectChart.destroy();
         subjectChart = new Chart(subjCtx.getContext('2d'), {
             type: 'bar',
-            data: {
-                labels: ['Mathematics'],
-                datasets: [{ label: 'Class Average (%)', data: [mathAvg.toFixed(1)], backgroundColor: '#003366' }]
-            },
+            data: { labels: ['Mathematics'], datasets: [{ label: 'Class Average (%)', data: [mathAvg.toFixed(1)], backgroundColor: '#003366' }] },
             options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
         });
     }
@@ -318,10 +288,7 @@ function renderIndividualStudentAnalytics(rollNo) {
     
     const badgeInfo = getPerformanceBadge(student.total, student.attendance);
     const badgeEl = document.getElementById('indPerformanceBadge');
-    if (badgeEl) {
-        badgeEl.className = `badge ${badgeInfo.cssClass}`;
-        badgeEl.innerText = badgeInfo.label;
-    }
+    if (badgeEl) { badgeEl.className = `badge ${badgeInfo.cssClass}`; badgeEl.innerText = badgeInfo.label; }
 
     if (document.getElementById('indTotalScore')) document.getElementById('indTotalScore').innerText = `${student.total} / 100`;
     if (document.getElementById('indAttendance')) document.getElementById('indAttendance').innerText = `${student.attendance}%`;
@@ -330,10 +297,7 @@ function renderIndividualStudentAnalytics(rollNo) {
     const subjectLabels = Object.keys(student.subjects || {});
     const subjectMarks = Object.values(student.subjects || {});
 
-    subjectMarks.forEach(m => {
-        if (m >= 35) passedCount++;
-        else failedCount++;
-    });
+    subjectMarks.forEach(m => { if (m >= 35) passedCount++; else failedCount++; });
 
     if (document.getElementById('indPassedSubjects')) document.getElementById('indPassedSubjects').innerText = `${passedCount} Subjects`;
     if (document.getElementById('indFailedSubjects')) document.getElementById('indFailedSubjects').innerText = `${failedCount} Subjects`;
@@ -343,10 +307,7 @@ function renderIndividualStudentAnalytics(rollNo) {
         if (individualSubjectChart) individualSubjectChart.destroy();
         individualSubjectChart = new Chart(indCtx.getContext('2d'), {
             type: 'bar',
-            data: {
-                labels: subjectLabels,
-                datasets: [{ label: 'Marks Obtained', data: subjectMarks, backgroundColor: subjectMarks.map(m => m >= 35 ? '#0055a5' : '#dc3545') }]
-            },
+            data: { labels: subjectLabels, datasets: [{ label: 'Marks Obtained', data: subjectMarks, backgroundColor: subjectMarks.map(m => m >= 35 ? '#0055a5' : '#dc3545') }] },
             options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
         });
     }
@@ -374,17 +335,9 @@ function openStudentModal(rollNo) {
     if (tbody) {
         tbody.innerHTML = '';
         Object.entries(student.subjects || {}).forEach(([subj, marks]) => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${subj}</td>
-                    <td>100</td>
-                    <td>${marks}</td>
-                    <td style="font-weight:bold; color:${marks >= 35 ? '#006633' : '#dc3545'}">${marks}%</td>
-                </tr>
-            `;
+            tbody.innerHTML += `<tr><td>${subj}</td><td>100</td><td>${marks}</td><td style="font-weight:bold; color:${marks >= 35 ? '#006633' : '#dc3545'}">${marks}%</td></tr>`;
         });
     }
-
     const modal = document.getElementById('studentAnalyticsModal');
     if (modal) modal.style.display = 'flex';
 }
@@ -395,24 +348,28 @@ function closeAnalyticsModal() {
 }
 
 // ==========================================
-// DATA SUBMISSION (NOW SAVING TO DATABASE)
+// DATA SUBMISSION (NOW WITH ERROR ALERTS)
 // ==========================================
 async function submitAttendance(e) {
     if (e && e.preventDefault) e.preventDefault();
 
     const selectedClass = document.getElementById('classSelect')?.value || "5th";
     const selectedDiv = document.getElementById('divSelect')?.value || "A";
-    const attDate = document.getElementById('attDate')?.value || new Date().toISOString().split('T')[0];
+    // Get date or fallback to today's date
+    let attDate = document.getElementById('attDate')?.value;
+    if (!attDate) attDate = new Date().toISOString().split('T')[0];
 
     const records = [];
     globalStudentsData.forEach(s => {
         const roll = s['Roll No'];
         const selectedRadio = document.querySelector(`input[name="att_${roll}"]:checked`);
         const status = selectedRadio ? selectedRadio.value : "Present";
-        
-        // We don't change attendance percentage locally, we let the backend calculate it
-        records.push({ roll_no: roll, status: status });
+        // Send student_name just in case the backend needs it
+        records.push({ roll_no: roll, status: status, student_name: s['Student Name'] });
     });
+
+    // Show loading so you know it clicked
+    alert("⏳ Saving attendance, please wait...");
 
     try {
         const res = await fetch(`${BACKEND_URL}/api/teacher/attendance`, {
@@ -420,21 +377,23 @@ async function submitAttendance(e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 class: selectedClass, 
-                div: selectedDiv,       // FIXED
+                div: selectedDiv, 
                 date: attDate, 
-                attendance: records     // FIXED
+                attendance: records 
             })
         });
+        
         const data = await res.json();
+        
         if (data.success) {
-            alert(`Attendance saved permanently for ${selectedClass} ${selectedDiv}!`);
-            await fetchAndDisplayStudents(selectedClass, selectedDiv); // Refresh fresh data
+            alert(`✅ SUCCESS! Attendance saved. (${data.saved} students updated)`);
+            await fetchAndDisplayStudents(selectedClass, selectedDiv);
         } else {
-            alert('Save failed: ' + (data.message || 'unknown error'));
+            alert('❌ Save failed: ' + (data.message || 'Unknown backend error'));
         }
     } catch (err) {
-        console.warn("API Sync failed:", err);
-        alert("Failed to connect to server.");
+        console.error(err);
+        alert("❌ Network Error: Could not connect to backend. Check if Render is awake.");
     }
 }
 
@@ -461,27 +420,31 @@ async function saveMarks(e) {
         marks.push({ roll_no: roll, ut1, ut2, assign, oral, term });
     });
 
+    alert("⏳ Saving marks, please wait...");
+
     try {
         const res = await fetch(`${BACKEND_URL}/api/teacher/marks`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 class: selectedClass, 
-                div: selectedDiv,      // FIXED
+                div: selectedDiv, 
                 subject: subject, 
-                marks: marks           // FIXED
+                marks: marks 
             })
         });
+        
         const data = await res.json();
+        
         if (data.success) {
-            alert(`Marks for ${subject} saved successfully!`);
-            await fetchAndDisplayStudents(selectedClass, selectedDiv); // Refresh fresh data
+            alert(`✅ SUCCESS! Marks for ${subject} saved. (${data.saved} students updated)`);
+            await fetchAndDisplayStudents(selectedClass, selectedDiv); 
         } else {
-            alert('Save failed: ' + (data.message || 'unknown error'));
+            alert('❌ Save failed: ' + (data.message || 'Unknown backend error'));
         }
     } catch (err) {
-        console.warn("API Sync failed:", err);
-        alert("Failed to connect to server.");
+        console.error(err);
+        alert("❌ Network Error: Could not connect to backend.");
     }
 }
 
