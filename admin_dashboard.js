@@ -52,6 +52,9 @@ async function loadAdminStudents() {
         const results = await Promise.all(fetchPromises);
         const allStudents = results.flatMap(res => res.students || []);
 
+        // SORT BY ROLL NO
+        allStudents.sort((a, b) => Number(a.roll_no) - Number(b.roll_no));
+
         renderStudentTable(allStudents);
     } catch (error) {
         console.error('Error fetching admin student list:', error);
@@ -66,12 +69,13 @@ function renderStudentTable(students) {
 
     students.forEach((student, index) => {
         const row = document.createElement('tr');
+        // Match the EXACT column names from Supabase
         row.innerHTML = `
-            <td>${student['Roll No'] || student.roll_no || (index + 1)}</td>
-            <td>${student['Student Name'] || student.name || 'N/A'}</td>
-            <td>Class ${student['Class'] || '5th'} - ${student['Div'] || ''}</td>
-            <td>${student['Father Name'] || 'N/A'}</td>
-            <td>${student['School ID'] || student.id || 'N/A'}</td>
+            <td>${student.roll_no || (index + 1)}</td>
+            <td>${student.student_name || 'N/A'}</td>
+            <td>Class ${student.class || '5th'} - ${student.div || ''}</td>
+            <td>${student.father_name || 'N/A'}</td>
+            <td>${student.school_id || 'N/A'}</td>
         `;
         tableBody.appendChild(row);
     });
@@ -87,7 +91,7 @@ function updateStudentCount(count) {
 }
 
 // Register Student Form Handler
-function addStudent() {
+async function addStudent() {
     const name = document.getElementById('stuName').value.trim();
     const cls = document.getElementById('stuClass').value.trim();
     const roll = document.getElementById('stuRoll').value.trim();
@@ -98,28 +102,31 @@ function addStudent() {
         return;
     }
 
-    const tbody = document.getElementById('adminStudentTableBody');
-    if (tbody) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${roll}</td>
-            <td>${name}</td>
-            <td>${cls}</td>
-            <td>N/A</td>
-            <td>${id}</td>
-        `;
-        tbody.prepend(tr);
-
-        // Update counts dynamically
-        const currentCount = tbody.children.length;
-        updateStudentCount(currentCount);
+    try {
+        const res = await fetch(`${BASE_URL}/api/admin/add-student`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, class: cls, roll: roll, id: id })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            alert("✅ Student added successfully to the database!");
+            // Reset Form Fields
+            document.getElementById('stuName').value = '';
+            document.getElementById('stuClass').value = '';
+            document.getElementById('stuRoll').value = '';
+            document.getElementById('stuId').value = '';
+            
+            // Reload table from database
+            await loadAdminStudents();
+        } else {
+            alert("❌ Failed to add student: " + (data.message || "Unknown error"));
+        }
+    } catch (err) {
+        alert("❌ Network Error: Could not connect to backend.");
     }
-
-    // Reset Form Fields
-    document.getElementById('stuName').value = '';
-    document.getElementById('stuClass').value = '';
-    document.getElementById('stuRoll').value = '';
-    document.getElementById('stuId').value = '';
 }
 
 // ==========================================
@@ -131,6 +138,8 @@ async function loadAdminTeachers() {
         const data = await response.json();
 
         if (data.success && data.teachers) {
+            // SORT ALPHABETICALLY BY NAME
+            data.teachers.sort((a, b) => (a.teacher_name || "").localeCompare(b.teacher_name || ""));
             renderTeacherTable(data.teachers);
         }
     } catch (error) {
@@ -146,12 +155,13 @@ function renderTeacherTable(teachers) {
 
     teachers.forEach((teacher, index) => {
         const row = document.createElement('tr');
+        // Match the EXACT column names from Supabase
         row.innerHTML = `
             <td>${index + 1}</td>
-            <td>${teacher['Teacher Name'] || teacher.name || 'N/A'}</td>
-            <td>${teacher['Class Assigned'] || 'N/A'}</td>
-            <td>${teacher['Education'] || 'N/A'}</td>
-            <td>${teacher['Role'] || 'Teacher'}</td>
+            <td>${teacher.teacher_name || 'N/A'}</td>
+            <td>${teacher.class_assigned || 'N/A'}</td>
+            <td>${teacher.education || 'N/A'}</td>
+            <td>${teacher.role || 'Teacher'}</td>
         `;
         tableBody.appendChild(row);
     });
@@ -167,7 +177,7 @@ function updateTeacherCount(count) {
 }
 
 // Assign Faculty Form Handler
-function addTeacher() {
+async function addTeacher() {
     const name = document.getElementById('tchNameInput').value.trim();
     const cls = document.getElementById('tchClassInput').value.trim();
     const edu = document.getElementById('tchEduInput').value.trim();
@@ -178,49 +188,66 @@ function addTeacher() {
         return;
     }
 
-    const tbody = document.getElementById('adminTeacherTableBody');
-    if (tbody) {
-        const count = tbody.children.length + 1;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${count}</td>
-            <td>${name}</td>
-            <td>${cls}</td>
-            <td>${edu}</td>
-            <td>Teacher</td>
-        `;
-        tbody.prepend(tr);
-
-        // Update counts dynamically
-        updateTeacherCount(tbody.children.length);
+    try {
+        const res = await fetch(`${BASE_URL}/api/admin/add-teacher`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, class: cls, education: edu, username: user })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            alert("✅ Teacher added successfully to the database!");
+            // Reset Form Fields
+            document.getElementById('tchNameInput').value = '';
+            document.getElementById('tchClassInput').value = '';
+            document.getElementById('tchEduInput').value = '';
+            document.getElementById('tchUserInput').value = '';
+            
+            // Reload table from database
+            await loadAdminTeachers();
+        } else {
+            alert("❌ Failed to add teacher: " + (data.message || "Unknown error"));
+        }
+    } catch (err) {
+        alert("❌ Network Error: Could not connect to backend.");
     }
-
-    // Reset Form Fields
-    document.getElementById('tchNameInput').value = '';
-    document.getElementById('tchClassInput').value = '';
-    document.getElementById('tchEduInput').value = '';
-    document.getElementById('tchUserInput').value = '';
 }
 
 // ==========================================
 // 5. NOTICE BOARD ANNOUNCEMENTS
 // ==========================================
-function postNotice() {
+async function postNotice() {
     const input = document.getElementById('noticeInput');
     const msg = input.value.trim();
     if (!msg) return;
 
-    const list = document.getElementById('noticeList');
-    if (list) {
-        const li = document.createElement('li');
-        li.style.cssText = "background: #f4f8fb; padding: 12px; border-left: 4px solid #0055a5; margin-bottom: 10px; border-radius: 4px;";
+    try {
+        const res = await fetch(`${BASE_URL}/api/admin/post-notice`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg })
+        });
         
-        const today = new Date().toISOString().split('T')[0];
-        li.innerHTML = `<strong>[${today}]:</strong> ${msg}`;
-        list.prepend(li);
+        const data = await res.json();
+        
+        if (data.success) {
+            const list = document.getElementById('noticeList');
+            const li = document.createElement('li');
+            li.style.cssText = "background: #f4f8fb; padding: 12px; border-left: 4px solid #0055a5; margin-bottom: 10px; border-radius: 4px;";
+            
+            const today = new Date().toISOString().split('T')[0];
+            li.innerHTML = `<strong>[${today}]:</strong> ${msg}`;
+            list.prepend(li);
+            
+            input.value = '';
+        } else {
+            alert("❌ Failed to post notice: " + (data.message || "Unknown error"));
+        }
+    } catch (err) {
+        alert("❌ Network Error: Could not connect to backend.");
     }
-
-    input.value = '';
 }
 
 // ==========================================
@@ -233,31 +260,63 @@ function toggleChat() {
     }
 }
 
-function sendChat() {
+async function sendChat() {
     const input = document.getElementById('chatInput');
-    const msg = input.value.trim();
+    const msg = input ? input.value.trim() : '';
     if (!msg) return;
 
     appendMsg(msg, 'user');
     input.value = '';
 
-    let response = "";
-    const q = msg.toLowerCase();
+    const chatBody = document.getElementById('chatBody');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'chat-msg bot';
+    loadingDiv.id = 'loadingBubble';
+    loadingDiv.innerHTML = '...';
+    chatBody.appendChild(loadingDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
 
-    const studentCount = document.getElementById('totalStudentCount')?.innerText || '0';
-    const teacherCount = document.getElementById('totalTeacherCount')?.innerText || '0';
+    let userObj = {};
+    try { userObj = JSON.parse(localStorage.getItem('userData') || '{}'); } catch (e) { userObj = {}; }
+    const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
 
-    if (q.includes("student") || q.includes("admission")) {
-        response = `There are currently ${studentCount} registered students dynamically fetched across standard 5th divisions.`;
-    } else if (q.includes("teacher") || q.includes("staff") || q.includes("faculty")) {
-        response = `There are currently ${teacherCount} active teaching staff details dynamically loaded from your faculty records.`;
-    } else if (q.includes("notice") || q.includes("announcement")) {
-        response = "You can publish real-time notices under the 'School Notice Board' tab.";
-    } else {
-        response = "I am your Admin Assistant. I can assist you with system stats, faculty records, and student directory queries.";
+    const context = {
+        admin_info: userObj,
+        total_students: document.getElementById('totalStudentCount')?.innerText || '0',
+        total_teachers: document.getElementById('totalTeacherCount')?.innerText || '0',
+        recent_students: [...document.querySelectorAll('#adminStudentTableBody tr')].slice(0, 20).map(r => ({
+            roll: r.cells[0]?.innerText, name: r.cells[1]?.innerText,
+            class: r.cells[2]?.innerText, school_id: r.cells[4]?.innerText
+        })),
+        recent_teachers: [...document.querySelectorAll('#adminTeacherTableBody tr')].slice(0, 20).map(r => ({
+            name: r.cells[1]?.innerText, class: r.cells[2]?.innerText,
+            education: r.cells[3]?.innerText, role: r.cells[4]?.innerText
+        })),
+        notices: [...document.querySelectorAll('#noticeList li')].slice(0, 5).map(li => li.innerText)
+    };
+
+    try {
+        const res = await fetch(`${BASE_URL}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: 'admin', message: msg, lang: lang, user: userObj, context: context })
+        });
+        
+        const data = await res.json();
+        const lb = document.getElementById('loadingBubble');
+        if (lb) lb.remove();
+        
+        const reply = (data && data.reply) ? data.reply : 'Sorry, no reply received.';
+        appendMsg(reply.replace(/\n/g, '<br>'), 'bot');
+    } catch (err) {
+        const lb = document.getElementById('loadingBubble');
+        if (lb) lb.remove();
+        
+        const errMsg = lang === 'mr' 
+            ? 'क्षमस्व, एआय सहाय्यक सध्या उपलब्ध नाही. कृपया ६० सेकंद थांबा.' 
+            : 'Sorry, AI temporarily unavailable. Please wait 60s.';
+        appendMsg(errMsg, 'bot');
     }
-
-    setTimeout(() => appendMsg(response, 'bot'), 400);
 }
 
 function appendMsg(text, type) {
