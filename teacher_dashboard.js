@@ -361,7 +361,6 @@ async function submitAttendance(e) {
 
     const selectedClass = document.getElementById('classSelect')?.value || "5th";
     const selectedDiv = document.getElementById('divSelect')?.value || "A";
-    // Get date or fallback to today's date
     let attDate = document.getElementById('attDate')?.value;
     if (!attDate) attDate = new Date().toISOString().split('T')[0];
 
@@ -370,11 +369,9 @@ async function submitAttendance(e) {
         const roll = s['Roll No'];
         const selectedRadio = document.querySelector(`input[name="att_${roll}"]:checked`);
         const status = selectedRadio ? selectedRadio.value : "Present";
-        // Send student_name just in case the backend needs it
         records.push({ roll_no: roll, status: status, student_name: s['Student Name'] });
     });
 
-    // Show loading so you know it clicked
     alert("⏳ Saving attendance, please wait...");
 
     try {
@@ -452,6 +449,72 @@ async function saveMarks(e) {
         console.error(err);
         alert("❌ Network Error: Could not connect to backend.");
     }
+}
+
+// ==========================================
+// AI VISION IMAGE UPLOAD
+// ==========================================
+async function uploadAttendanceImage() {
+    const fileInput = document.getElementById('attendanceImage');
+    const statusText = document.getElementById('imageUploadStatus');
+    const file = fileInput.files[0];
+    
+    if (!file) return;
+
+    const selectedClass = document.getElementById('classSelect')?.value || "5th";
+    const selectedDiv = document.getElementById('divSelect')?.value || "A";
+
+    statusText.innerText = "⏳ AI is reading the image (this takes 5-10 seconds)...";
+    statusText.style.color = "#ff9800";
+
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('class', selectedClass);
+    formData.append('div', selectedDiv);
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/teacher/upload_attendance`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            statusText.innerText = `✅ ${data.message}`;
+            statusText.style.color = "#28a745";
+            
+            // Automatically check the radio buttons based on AI extraction
+            data.records.forEach(rec => {
+                const roll = rec.roll_no;
+                const status = rec.status;
+                
+                const presentRadio = document.querySelector(`input[name="att_${roll}"][value="Present"]`);
+                const absentRadio = document.querySelector(`input[name="att_${roll}"][value="Absent"]`);
+                
+                if (presentRadio && absentRadio) {
+                    if (status === "Present") presentRadio.checked = true;
+                    if (status === "Absent") absentRadio.checked = true;
+                }
+            });
+            
+            // Wait 3 seconds, then refresh fresh data
+            setTimeout(async () => {
+                await fetchAndDisplayStudents(selectedClass, selectedDiv);
+                statusText.innerText = "";
+            }, 3000);
+
+        } else {
+            statusText.innerText = `❌ Error: ${data.message}`;
+            statusText.style.color = "#dc3545";
+        }
+    } catch (err) {
+        statusText.innerText = "❌ Network Error. Check if Render is awake.";
+        statusText.style.color = "#dc3545";
+    }
+    
+    // Reset file input so they can upload again
+    fileInput.value = '';
 }
 
 // AI Assistant Widget Logic
