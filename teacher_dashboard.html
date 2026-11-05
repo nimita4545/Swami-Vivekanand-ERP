@@ -157,13 +157,14 @@
                 <button class="btn btn-success" onclick="submitAttendance()" data-en="Submit Attendance" data-mr="हजेरी सादर करा">हजेरी सादर करा</button>
             </div>
 
-            <!-- AI Vision Image Upload Section (NEW) -->
+            <!-- AI Vision Image Upload Section -->
             <div style="margin-bottom: 20px; padding: 15px; background: #f0f6fb; border-radius: 8px; border: 1px solid #c8d6e5;">
                 <h4 style="color: #003366; margin-bottom: 10px;" data-en="✨ AI Vision Agent: Upload Paper Attendance" data-mr="✨ एआय व्हिजन एजंट: पेपर हजेरी अपलोड करा">✨ AI Vision Agent: Upload Paper Attendance</h4>
                 <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;" data-en="Upload a photo of the paper register. The AI will automatically check the boxes below." data-mr="पेपर रजिस्टरचा फोटो अपलोड करा. एआय स्वयंचलितपणे खालील बॉक्स तपासेल.">Upload a photo of the paper register. The AI will automatically check the boxes below.</p>
                 
-                <input type="file" id="attendanceImage" accept="image/*" capture="camera" style="display: none;" onchange="uploadAttendanceImage()">
-                <button class="btn" onclick="document.getElementById('attendanceImage').click()" data-en="📸 Take Photo / Upload Image" data-mr="📸 फोटो घ्या / इमेज अपलोड करा">📸 Take Photo / Upload Image</button>
+                <!-- Removed capture="camera" so it opens file explorer on PC -->
+                <input type="file" id="attendanceImage" accept="image/*" style="display: none;" onchange="uploadAttendanceImage()">
+                <button class="btn" onclick="document.getElementById('attendanceImage').click()" data-en="📸 Upload Image File" data-mr="📸 इमेज फाईल अपलोड करा">📸 Upload Image File</button>
                 <span id="imageUploadStatus" style="margin-left: 10px; font-weight: bold; color: #0055a5;"></span>
             </div>
 
