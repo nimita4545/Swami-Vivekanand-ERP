@@ -129,6 +129,7 @@
                         </tr>
                     </thead>
                     <tbody id="attBody">
+                        <!-- Will be updated dynamically -->
                         <tr><td>2026-08-17</td><td data-i18n="day_mon">सोमवार</td><td><span class="badge-present" data-i18n="status_present">उपस्थित</span></td></tr>
                         <tr><td>2026-08-18</td><td data-i18n="day_tue">मंगळवार</td><td><span class="badge-present" data-i18n="status_present">उपस्थित</span></td></tr>
                         <tr><td>2026-08-19</td><td data-i18n="day_wed">बुधवार</td><td><span class="badge-absent" data-i18n="status_absent">अनुपस्थित</span></td></tr>
@@ -152,13 +153,8 @@
                             <th data-i18n="th_total">एकूण (६०)</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr><td data-i18n="sub_english">इंग्रजी</td><td>18</td><td>17</td><td>9</td><td>9</td><td><b>53</b></td></tr>
-                        <tr><td data-i18n="sub_hindi">हिंदी</td><td>16</td><td>18</td><td>8</td><td>10</td><td><b>52</b></td></tr>
-                        <tr><td data-i18n="sub_marathi">मराठी</td><td>19</td><td>18</td><td>10</td><td>9</td><td><b>56</b></td></tr>
-                        <tr><td data-i18n="sub_maths">गणित</td><td>20</td><td>19</td><td>10</td><td>10</td><td><b>59</b></td></tr>
-                        <tr><td data-i18n="sub_science">विज्ञान</td><td>17</td><td>16</td><td>9</td><td>8</td><td><b>50</b></td></tr>
-                        <tr><td data-i18n="sub_social">सामाजिक शास्त्रे</td><td>18</td><td>17</td><td>8</td><td>9</td><td><b>52</b></td></tr>
+                    <tbody id="studentMarksBody">
+                        <!-- Will be updated dynamically -->
                     </tbody>
                 </table>
             </div>
@@ -508,12 +504,14 @@
             }
         };
 
-        // Initialize User Session and Language
-        document.addEventListener('DOMContentLoaded', () => {
+        // ==========================================
+        // INITIALIZATION & LIVE DATA FETCH
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', async () => {
             applyLanguage(currentLang);
 
             const rawUser = localStorage.getItem('userData');
-            let user = rawUser ? JSON.parse(rawUser) : { name: "Nikhil Kokate", roll_no: "101", class: "5th", div: "A" };
+            let user = rawUser ? JSON.parse(rawUser) : { name: "Nikhil Kokate", roll_no: "101", class: "5th", div: "A", username: "nikhil1" };
             
             const fullClass = `${user.class} ${user.div}`.trim();
             const teacher = classTeachers[fullClass] || "Dilip Patil";
@@ -528,6 +526,57 @@
             document.getElementById('rcRoll').innerText = user.roll_no || "101";
 
             renderTimetable("5th A");
+
+            // ==========================================
+            // FETCH LIVE MARKS FROM SUPABASE
+            // ==========================================
+            if (user.username) {
+                try {
+                    const res = await fetch(`https://swami-vivekanand-erp-backend2-17.onrender.com/api/student/dashboard-data?username=${user.username}`);
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        // 1. Update Attendance
+                        document.getElementById('attPct').innerText = data.attendance_percentage;
+
+                        // 2. Update Marks Table
+                        const marksBody = document.getElementById('studentMarksBody');
+                        if (marksBody) {
+                            marksBody.innerHTML = '';
+                            
+                            // Map subjects to Marathi translation keys
+                            const subjectKeys = {
+                                "Mathematics": "sub_maths",
+                                "English": "sub_english",
+                                "Science": "sub_science",
+                                "Hindi": "sub_hindi",
+                                "Marathi": "sub_marathi",
+                                "Social Science": "sub_social"
+                            };
+
+                            data.marks.forEach(m => {
+                                const tr = document.createElement('tr');
+                                const key = subjectKeys[m.subject] || "";
+                                // Use data-i18n so it translates automatically if the user switches language
+                                tr.innerHTML = `
+                                    <td data-i18n="${key}">${m.subject}</td>
+                                    <td>${m.ut1}</td>
+                                    <td>${m.ut2}</td>
+                                    <td>${m.assignment}</td>
+                                    <td>${m.oral}</td>
+                                    <td><b>${m.total}</b></td>
+                                `;
+                                marksBody.appendChild(tr);
+                            });
+                            
+                            // Re-apply language to translate the newly added rows
+                            applyLanguage(currentLang);
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch live student data:", err);
+                }
+            }
         });
 
         // Tab Navigation
@@ -571,7 +620,7 @@
         }
 
         // ==========================================
-        // CHATBOT — Gemini API (only this was changed)
+        // CHATBOT — Gemini API
         // ==========================================
         async function sendChat() {
             const input = document.getElementById('chatInput');
@@ -606,7 +655,7 @@
                     day: r.cells[1]?.innerText || '',
                     status: r.cells[2]?.innerText || ''
                 })),
-                marks: [...document.querySelectorAll('#marksSec tbody tr')].map(r => ({
+                marks: [...document.querySelectorAll('#studentMarksBody tr')].map(r => ({
                     subject: r.cells[0]?.innerText || '',
                     ut1: r.cells[1]?.innerText || '',
                     ut2: r.cells[2]?.innerText || '',
@@ -684,7 +733,7 @@
             recognition.start();
 
             recognition.onresult = function(event) {
-                const text = event.results[0][0].transcript;
+                const text = event.results[0].transcript;
                 document.getElementById('chatInput').value = text;
                 sendChat();
             };
